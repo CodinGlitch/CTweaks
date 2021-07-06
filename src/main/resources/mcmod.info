@@ -1,0 +1,16 @@
+[
+{
+  "modid": "ctweaks",
+  "name": "CTweaks",
+  "description": "A",
+  "version": "1.0",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["CodinGlitch"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
