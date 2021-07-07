@@ -1,0 +1,18 @@
+{
+  "fox_squeak": {
+    "sounds": [
+      {
+        "name": "ctweaks:fox/idle1",
+        "stream": true
+      },
+      {
+        "name": "ctweaks:fox/idle2",
+        "stream": true
+      },
+      {
+        "name": "ctweaks:fox/idle3",
+        "stream": true
+      }
+    ]
+  }
+}
