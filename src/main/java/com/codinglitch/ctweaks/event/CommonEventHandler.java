@@ -4,12 +4,15 @@ package com.codinglitch.ctweaks.event;
 import com.codinglitch.ctweaks.config.DisableConfig;
 import com.codinglitch.ctweaks.registry.capabilities.DeathFearProvider;
 import com.codinglitch.ctweaks.registry.capabilities.IDeathFear;
+import com.codinglitch.ctweaks.registry.entities.FoxEntityModified;
+import com.codinglitch.ctweaks.registry.init.EntityInit;
 import com.codinglitch.ctweaks.util.ReferenceC;
 import com.codinglitch.ctweaks.util.network.CTweaksPacketHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.EffectInstance;
@@ -23,6 +26,7 @@ import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.CriticalHitEvent;
@@ -39,6 +43,19 @@ import java.util.Random;
 @EventBusSubscriber
 public class CommonEventHandler {
     public static Random rand = new Random();
+
+    @SubscribeEvent
+    public static void onEntityJoin(EntityJoinWorldEvent event)
+    {
+        if (DisableConfig.tame_fox.get()) return;
+        if (event.getEntity() instanceof FoxEntity)
+        {
+            event.setCanceled(true);
+            FoxEntityModified fox = new FoxEntityModified(EntityInit.FOX_MODIFIED.get(), event.getWorld());
+            fox.copyPosition(event.getEntity());
+            event.getWorld().addFreshEntity(fox);
+        }
+    }
 
     @SubscribeEvent
     public static void onCrit(CriticalHitEvent event)
