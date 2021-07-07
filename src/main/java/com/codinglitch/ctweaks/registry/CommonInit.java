@@ -3,6 +3,7 @@ package com.codinglitch.ctweaks.registry;
 import com.codinglitch.ctweaks.registry.init.BlocksInit;
 import com.codinglitch.ctweaks.registry.init.CapabilitiesInit;
 import com.codinglitch.ctweaks.util.ReferenceC;
+import com.codinglitch.ctweaks.util.SoundsC;
 import com.codinglitch.ctweaks.util.network.CTweaksPacketHandler;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.model.ModelResourceLocation;

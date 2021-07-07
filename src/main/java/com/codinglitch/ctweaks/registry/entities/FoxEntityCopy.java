@@ -1,6 +1,5 @@
 package com.codinglitch.ctweaks.registry.entities;
 
-import com.codinglitch.ctweaks.CTweaks;
 import com.codinglitch.ctweaks.registry.init.EntityInit;
 import com.google.common.collect.Lists;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -32,12 +31,9 @@ import net.minecraft.nbt.NBTUtil;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.particles.IParticleData;
 import net.minecraft.particles.ItemParticleData;
 import net.minecraft.particles.ParticleTypes;
 import net.minecraft.pathfinding.PathNodeType;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.server.management.PreYggdrasilConverter;
 import net.minecraft.stats.Stats;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.*;
@@ -86,6 +82,8 @@ public class FoxEntityCopy extends TameableEntity {
     private float crouchAmountO;
     private int ticksSinceEaten;
     private boolean isImportant;
+
+    private LivingEntity ignoreStalk;
 
     public FoxEntityCopy(EntityType<? extends FoxEntityCopy> p_i50271_1_, World p_i50271_2_) {
         super(p_i50271_1_, p_i50271_2_);
@@ -137,9 +135,10 @@ public class FoxEntityCopy extends TameableEntity {
         this.goalSelector.addGoal(11, new WaterAvoidingRandomWalkingGoal(this, 1.0D));
         this.goalSelector.addGoal(11, new FindItemsGoal());
         this.goalSelector.addGoal(12, new WatchGoal(this, PlayerEntity.class, 24.0F));
-        this.targetSelector.addGoal(3, new RevengeGoal(LivingEntity.class, false, false, (p_234193_1_) -> {
-            return TRUSTED_TARGET_SELECTOR.test(p_234193_1_) && !this.trusts(p_234193_1_.getUUID());
+        this.targetSelector.addGoal(3, new RevengeGoal(LivingEntity.class, false, false, (entity) -> {
+            return TRUSTED_TARGET_SELECTOR.test(entity) && !this.trusts(entity.getUUID());
         }));
+        this.targetSelector.addGoal(2, new OwnerHurtMobGoal(this));
     }
 
     public SoundEvent getEatingSound(ItemStack p_213353_1_) {
@@ -357,8 +356,8 @@ public class FoxEntityCopy extends TameableEntity {
         return this.getFlag(1);
     }
 
-    public void setSitting(boolean p_213466_1_) {
-        this.setFlag(1, p_213466_1_);
+    public void setSitting(boolean sitting) {
+        this.setFlag(1, sitting);
     }
 
     public boolean isImportant()
@@ -375,52 +374,52 @@ public class FoxEntityCopy extends TameableEntity {
         return this.getFlag(64);
     }
 
-    private void setFaceplanted(boolean p_213492_1_) {
-        this.setFlag(64, p_213492_1_);
+    private void setFaceplanted(boolean faceplanted) {
+        this.setFlag(64, faceplanted);
     }
 
     private boolean isDefending() {
         return this.getFlag(128);
     }
 
-    private void setDefending(boolean p_213482_1_) {
-        this.setFlag(128, p_213482_1_);
+    private void setDefending(boolean isDefending) {
+        this.setFlag(128, isDefending);
     }
 
     public boolean isSleeping() {
         return this.getFlag(32);
     }
 
-    private void setSleeping(boolean p_213485_1_) {
-        this.setFlag(32, p_213485_1_);
+    private void setSleeping(boolean isSleeping) {
+        this.setFlag(32, isSleeping);
     }
 
-    private void setFlag(int p_213505_1_, boolean p_213505_2_) {
-        if (p_213505_2_) {
-            this.entityData.set(DATA_FLAGS_ID, (byte)(this.entityData.get(DATA_FLAGS_ID) | p_213505_1_));
+    private void setFlag(int flag, boolean value) {
+        if (value) {
+            this.entityData.set(DATA_FLAGS_ID, (byte)(this.entityData.get(DATA_FLAGS_ID) | flag));
         } else {
-            this.entityData.set(DATA_FLAGS_ID, (byte)(this.entityData.get(DATA_FLAGS_ID) & ~p_213505_1_));
+            this.entityData.set(DATA_FLAGS_ID, (byte)(this.entityData.get(DATA_FLAGS_ID) & ~flag));
         }
 
     }
 
-    private boolean getFlag(int p_213507_1_) {
-        return (this.entityData.get(DATA_FLAGS_ID) & p_213507_1_) != 0;
+    private boolean getFlag(int flag) {
+        return (this.entityData.get(DATA_FLAGS_ID) & flag) != 0;
     }
 
-    public boolean canTakeItem(ItemStack p_213365_1_) {
-        EquipmentSlotType equipmentslottype = MobEntity.getEquipmentSlotForItem(p_213365_1_);
+    public boolean canTakeItem(ItemStack item) {
+        EquipmentSlotType equipmentslottype = MobEntity.getEquipmentSlotForItem(item);
         if (!this.getItemBySlot(equipmentslottype).isEmpty()) {
             return false;
         } else {
-            return equipmentslottype == EquipmentSlotType.MAINHAND && super.canTakeItem(p_213365_1_);
+            return equipmentslottype == EquipmentSlotType.MAINHAND && super.canTakeItem(item);
         }
     }
 
-    public boolean canHoldItem(ItemStack p_175448_1_) {
-        Item item = p_175448_1_.getItem();
-        ItemStack itemstack = this.getItemBySlot(EquipmentSlotType.MAINHAND);
-        return itemstack.isEmpty() || this.ticksSinceEaten > 0 && item.isEdible() && !itemstack.getItem().isEdible();
+    public boolean canHoldItem(ItemStack itemStack) {
+        Item item = itemStack.getItem();
+        ItemStack holding = this.getItemBySlot(EquipmentSlotType.MAINHAND);
+        return holding.isEmpty() || this.ticksSinceEaten > 0 && item.isEdible() && !holding.getItem().isEdible();
     }
 
     public void spitOutItem(ItemStack stack) {
@@ -433,7 +432,7 @@ public class FoxEntityCopy extends TameableEntity {
         }
         if (!stack.isEmpty())
         {
-            isImportant = false;
+            setImportant(false);
         }
     }
 
@@ -889,7 +888,7 @@ public class FoxEntityCopy extends TameableEntity {
                 return false;
             } else {
                 LivingEntity livingentity = FoxEntityCopy.this.getTarget();
-                return livingentity != null && livingentity.isAlive() && STALKABLE_PREY.test(livingentity) && FoxEntityCopy.this.distanceToSqr(livingentity) > 36.0D && !FoxEntityCopy.this.isCrouching() && !FoxEntityCopy.this.isInterested() && !FoxEntityCopy.this.jumping;
+                return livingentity != null && livingentity.isAlive() && (STALKABLE_PREY.test(livingentity) | livingentity.equals(ignoreStalk)) && FoxEntityCopy.this.distanceToSqr(livingentity) > 36.0D && !FoxEntityCopy.this.isCrouching() && !FoxEntityCopy.this.isInterested() && !FoxEntityCopy.this.jumping;
             }
         }
 
@@ -914,7 +913,7 @@ public class FoxEntityCopy extends TameableEntity {
         public void tick() {
             if (getOwner() != null)
             {
-                if (getOwner().position().distanceTo(position()) > 15)
+                if (getOwner().position().distanceTo(position()) > 20)
                 {
                     stop();
                 }
@@ -1066,6 +1065,48 @@ public class FoxEntityCopy extends TameableEntity {
 
         public boolean canUse() {
             return !FoxEntityCopy.this.isDefending() && super.canUse();
+        }
+    }
+
+    public class OwnerHurtMobGoal extends TargetGoal
+    {
+        protected final TameableEntity tameAnimal;
+        protected LivingEntity ownerLastHurt;
+        protected int timestamp;
+
+        public OwnerHurtMobGoal(TameableEntity entity) {
+            super(entity, false);
+            this.tameAnimal = entity;
+            this.setFlags(EnumSet.of(Goal.Flag.TARGET));
+        }
+
+        @Override
+        public boolean canUse() {
+            if (this.tameAnimal.isTame() && !this.tameAnimal.isOrderedToSit()) {
+                LivingEntity livingentity = this.tameAnimal.getOwner();
+                if (livingentity == null) {
+                    return false;
+                } else {
+                    this.ownerLastHurt = livingentity.getLastHurtMob();
+                    int i = livingentity.getLastHurtMobTimestamp();
+                    return i != this.timestamp && this.canAttack(this.ownerLastHurt, EntityPredicate.DEFAULT) && this.tameAnimal.wantsToAttack(this.ownerLastHurt, livingentity);
+                }
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public void start() {
+            FoxEntityCopy.this.setTarget(this.ownerLastHurt);
+            FoxEntityCopy.this.ignoreStalk = this.ownerLastHurt;
+            this.mob.setTarget(this.ownerLastHurt);
+            LivingEntity livingentity = this.tameAnimal.getOwner();
+            if (livingentity != null) {
+                this.timestamp = livingentity.getLastHurtMobTimestamp();
+            }
+
+            super.start();
         }
     }
 

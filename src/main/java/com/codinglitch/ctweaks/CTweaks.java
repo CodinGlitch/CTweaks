@@ -9,6 +9,7 @@ import com.codinglitch.ctweaks.registry.init.EntityInit;
 import com.codinglitch.ctweaks.registry.init.ItemsInit;
 import com.codinglitch.ctweaks.registry.init.TileEntityInit;
 import com.codinglitch.ctweaks.util.ReferenceC;
+import com.codinglitch.ctweaks.util.SoundsC;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ComposterBlock;
@@ -64,6 +65,7 @@ public class CTweaks {
         ItemsInit.registerBus();
         TileEntityInit.registerBus();
         EntityInit.registerBus();
+        SoundsC.registerBus();
     }
 
     private void setup(FMLCommonSetupEvent event)

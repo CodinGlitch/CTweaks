@@ -1,6 +1,7 @@
 
 package com.codinglitch.ctweaks.event;
 
+import com.codinglitch.ctweaks.CTweaks;
 import com.codinglitch.ctweaks.config.DisableConfig;
 import com.codinglitch.ctweaks.registry.capabilities.DeathFearProvider;
 import com.codinglitch.ctweaks.registry.capabilities.IDeathFear;
@@ -17,6 +18,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
@@ -27,6 +29,7 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.CriticalHitEvent;
@@ -142,6 +145,18 @@ public class CommonEventHandler {
         {
             IDeathFear cap = capability1.orElseThrow(IllegalArgumentException::new);
             cap.setFear(fear);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLivingAttack(LivingAttackEvent event)
+    {
+        if (event.getEntityLiving() instanceof FoxEntityModified) // Have to make foxes immune to berry bushes here because .immuneTo is not working (or im doing something wrong)
+        {
+            if (event.getSource() == DamageSource.SWEET_BERRY_BUSH)
+            {
+                event.setCanceled(true);
+            }
         }
     }
 
