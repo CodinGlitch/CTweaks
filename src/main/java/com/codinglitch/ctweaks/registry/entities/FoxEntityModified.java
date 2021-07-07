@@ -4,6 +4,7 @@ import net.minecraft.client.renderer.entity.WolfRenderer;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -29,6 +30,30 @@ public class FoxEntityModified extends FoxEntityCopy {
         return DyeColor.RED;
     }
 
+    @Override
+    public boolean canMate(AnimalEntity animalEntity) {
+        if (animalEntity == this) {
+            return false;
+        } else if (!this.isTame()) {
+            return false;
+        } else if (!(animalEntity instanceof FoxEntityCopy)) {
+            return false;
+        } else {
+            FoxEntityCopy foxEntity = (FoxEntityCopy)animalEntity;
+            if (!foxEntity.isTame()) {
+                return false;
+            } else if (foxEntity.isInSittingPose()) {
+                return false;
+            } else {
+                return this.isInLove() && foxEntity.isInLove();
+            }
+        }
+    }
+
+    @Override
+    public boolean canFallInLove() {
+        return isTame() & !isInLove();
+    }
 
     @Override
     protected void pickUpItem(ItemEntity itemEntity) {

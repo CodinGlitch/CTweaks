@@ -1065,7 +1065,7 @@ public class FoxEntityCopy extends TameableEntity {
         }
 
         public boolean canUse() {
-            return !FoxEntityCopy.this.isDefending() && super.canUse() ;
+            return !FoxEntityCopy.this.isDefending() && super.canUse();
         }
     }
 
