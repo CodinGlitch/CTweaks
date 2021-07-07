@@ -120,19 +120,20 @@ public class FoxEntityModified extends FoxEntityCopy {
                     if (player.getMainHandItem().isEmpty() & this.isOwnedBy(player))
                     {
                         this.playSound(SoundsC.fox_squeak.get(), 1.0F, 1.3F);
+                        if (this.isSleeping())
+                        {
+                            this.wakeUp();
+                        }
                     }
                     else
                     {
                         if ((!actionresulttype.consumesAction() || this.isBaby()) && this.isOwnedBy(player)) {
                             this.setOrderedToSit(!this.isOrderedToSit());
-                            this.setSitting(!this.isSitting());
-                            if (this.isSleeping())
-                            {
-                                this.stopSleeping();
-                            }
+                            this.setSitting(this.isOrderedToSit());
 
                             this.jumping = false;
                             this.navigation.stop();
+                            this.getMoveControl().setWantedPosition(this.getX(), this.getY(), this.getZ(), 0.0D);
                             this.setTarget((LivingEntity)null);
                             return ActionResultType.SUCCESS;
                         }

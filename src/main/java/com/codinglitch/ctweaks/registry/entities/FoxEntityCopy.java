@@ -1,5 +1,6 @@
 package com.codinglitch.ctweaks.registry.entities;
 
+import com.codinglitch.ctweaks.CTweaks;
 import com.codinglitch.ctweaks.registry.init.EntityInit;
 import com.google.common.collect.Lists;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -468,10 +469,6 @@ public class FoxEntityCopy extends TameableEntity {
                 this.wakeUp();
             }
 
-            if (flag || this.isSleeping()) {
-                this.setSitting(false);
-            }
-
             if (this.isFaceplanted() && this.level.random.nextFloat() < 0.2F) {
                 BlockPos blockpos = this.blockPosition();
                 BlockState blockstate = this.level.getBlockState(blockpos);
@@ -556,7 +553,7 @@ public class FoxEntityCopy extends TameableEntity {
         return MathHelper.ceil((p_225508_1_ - 5.0F) * p_225508_2_);
     }
 
-    private void wakeUp() {
+    void wakeUp() {
         this.setSleeping(false);
     }
 
@@ -913,7 +910,7 @@ public class FoxEntityCopy extends TameableEntity {
         public void tick() {
             if (getOwner() != null)
             {
-                if (getOwner().position().distanceTo(position()) > 20)
+                if (getOwner().position().distanceTo(position()) > 20 & !FoxEntityCopy.this.isSitting())
                 {
                     stop();
                 }
@@ -1291,7 +1288,6 @@ public class FoxEntityCopy extends TameableEntity {
         }
 
         public boolean canUse() {
-            if (FoxEntityCopy.this.isSitting()) return false;
             if (FoxEntityCopy.this.xxa == 0.0F && FoxEntityCopy.this.yya == 0.0F && FoxEntityCopy.this.zza == 0.0F) {
                 return this.canSleep() || FoxEntityCopy.this.isSleeping();
             } else {
@@ -1310,17 +1306,19 @@ public class FoxEntityCopy extends TameableEntity {
             } else {
                 if (FoxEntityCopy.this.isSitting())
                 {
-                    this.countdown = 200+FoxEntityCopy.this.random.nextInt(140);
-                    return false;
+                    if (!this.hasShelter())
+                    {
+                        FoxEntityCopy.this.wakeUp();
+                    }
+                    return this.hasShelter();
                 }
                 return (FoxEntityCopy.this.level.isDay() && this.hasShelter() && !this.alertable());
             }
         }
 
         public void stop() {
-            this.countdown = FoxEntityCopy.this.random.nextInt(140);
+            this.countdown = 100+FoxEntityCopy.this.random.nextInt(140);
             FoxEntityCopy.this.clearStates();
-            FoxEntityCopy.this.setSitting(false);
         }
 
         public void start() {
@@ -1353,7 +1351,15 @@ public class FoxEntityCopy extends TameableEntity {
         }
 
         private boolean canFoxMove() {
-            return !FoxEntityCopy.this.isSleeping() && !FoxEntityCopy.this.isSitting() && !FoxEntityCopy.this.isDefending() && FoxEntityCopy.this.getTarget() == null;
+            boolean flag = true;
+            if (getOwner() != null)
+            {
+                if (getOwner().position().distanceTo(position()) > 20)
+                {
+                    flag = false;
+                }
+            }
+            return flag && !FoxEntityCopy.this.isSleeping() && !FoxEntityCopy.this.isSitting() && !FoxEntityCopy.this.isDefending() && FoxEntityCopy.this.getTarget() == null;
         }
     }
 
