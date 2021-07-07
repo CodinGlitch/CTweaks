@@ -15,6 +15,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
+import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -53,13 +54,9 @@ public class ClientEventHandler {
         ClientPlayerEntity player = Minecraft.getInstance().player;
         LazyOptional<IDeathFear> capability1 = player.getCapability(DeathFearProvider.capability);
 
-        CTweaks.logger.info("check 1");
-
         if (capability1.isPresent())
         {
             IDeathFear cap = capability1.orElseThrow(IllegalArgumentException::new);
-
-            CTweaks.logger.info(cap.getFear());
 
             if (cap.getMaxFearCounter() != 0)
             {

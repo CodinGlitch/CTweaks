@@ -1,6 +1,7 @@
 
 package com.codinglitch.ctweaks.event;
 
+import com.codinglitch.ctweaks.config.DisableConfig;
 import com.codinglitch.ctweaks.registry.capabilities.DeathFearProvider;
 import com.codinglitch.ctweaks.registry.capabilities.IDeathFear;
 import com.codinglitch.ctweaks.util.ReferenceC;
@@ -18,6 +19,7 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.event.ClientChatEvent;
+import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
@@ -41,6 +43,8 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onCrit(CriticalHitEvent event)
     {
+        if (DisableConfig.axe_crit.get()) return;
+
         if (event.getEntity() instanceof PlayerEntity & event.getTarget() instanceof LivingEntity & event.isVanillaCritical())
         {
             PlayerEntity player = (PlayerEntity) event.getEntity();
@@ -53,6 +57,8 @@ public class CommonEventHandler {
 
     @SubscribeEvent
     public static void attachCapability(AttachCapabilitiesEvent<Entity> event) {
+        if (DisableConfig.trauma.get()) return;
+
         if (!(event.getObject() instanceof PlayerEntity)) return;
 
         event.addCapability(new ResourceLocation(ReferenceC.MODID, "deathfear"), new DeathFearProvider());
@@ -61,6 +67,8 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onDeath(LivingDeathEvent event)
     {
+        if (DisableConfig.trauma.get()) return;
+
         if (!(event.getEntity() instanceof PlayerEntity)) return;
 
         LazyOptional<IDeathFear> capability = event.getEntity().getCapability(DeathFearProvider.capability);
@@ -91,6 +99,8 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onPlayerCloned(PlayerEvent.Clone event)
     {
+        if (DisableConfig.trauma.get()) return;
+
         if (!event.isWasDeath()) return;
         PlayerEntity from = event.getOriginal();
         PlayerEntity to = event.getPlayer();
@@ -121,6 +131,8 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event)
     {
+        if (DisableConfig.trauma.get()) return;
+
         if (!(event.getEntityLiving() instanceof PlayerEntity)) return;
 
         PlayerEntity player = (PlayerEntity) event.getEntityLiving();
@@ -161,6 +173,8 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onSleep(SleepingLocationCheckEvent event)
     {
+        if (DisableConfig.trauma.get()) return;
+
         if (!(event.getEntityLiving() instanceof PlayerEntity)) return;
         PlayerEntity player = (PlayerEntity) event.getEntityLiving();
 
@@ -191,9 +205,9 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event)
     {
+        if (DisableConfig.trauma.get()) return;
+
         PlayerEntity player = event.player;
-
-
 
         LazyOptional<IDeathFear> capability = player.getCapability(DeathFearProvider.capability);
 
@@ -209,7 +223,6 @@ public class CommonEventHandler {
 
             if (fear.equals("fall"))
             {
-
                 if (player.position().y > 100)
                 {
                     cap.setFearCounter(50);
