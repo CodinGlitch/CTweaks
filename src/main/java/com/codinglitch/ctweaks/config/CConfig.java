@@ -11,13 +11,17 @@ import java.io.File;
 @Mod.EventBusSubscriber
 public class CConfig {
     private static final ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+    private static final ForgeConfigSpec.Builder client_builder = new ForgeConfigSpec.Builder();
 
     public static final ForgeConfigSpec config;
+    public static final ForgeConfigSpec client_config;
 
     static
     {
         DisableConfig.init(builder);
         config = builder.build();
+        ClientConfig.init(client_builder);
+        client_config = client_builder.build();
     }
 
     public static void initConfig(ForgeConfigSpec config, String path)
