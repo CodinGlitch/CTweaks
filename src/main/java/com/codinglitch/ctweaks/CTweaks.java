@@ -4,6 +4,7 @@ import com.codinglitch.ctweaks.client.renderer.FoxRendererModified;
 import com.codinglitch.ctweaks.config.CConfig;
 import com.codinglitch.ctweaks.registry.CommonInit;
 import com.codinglitch.ctweaks.registry.entities.FoxEntityModified;
+import com.codinglitch.ctweaks.registry.entities.PolarBearEntityModified;
 import com.codinglitch.ctweaks.registry.init.BlocksInit;
 import com.codinglitch.ctweaks.registry.init.EntityInit;
 import com.codinglitch.ctweaks.registry.init.ItemsInit;
@@ -13,13 +14,16 @@ import com.codinglitch.ctweaks.util.SoundsC;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ComposterBlock;
+import net.minecraft.client.renderer.entity.PolarBearRenderer;
 import net.minecraft.entity.ai.attributes.GlobalEntityTypeAttributes;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.monster.ZombieEntity;
 import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.tags.ItemTags;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -52,6 +56,7 @@ public class CTweaks {
         instance = this;
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CConfig.config);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, CConfig.client_config);
 
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::doClientStuff);
@@ -72,10 +77,35 @@ public class CTweaks {
     {
         CommonInit.init();
         ComposterBlock.COMPOSTABLES.put(Items.ROTTEN_FLESH.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.BAMBOO.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.BEEF.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.PORKCHOP.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.CHICKEN.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.MUTTON.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.TROPICAL_FISH.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.SALMON.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.COD.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.RABBIT.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.LEATHER.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.RABBIT_HIDE.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.RABBIT_FOOT.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.COOKED_PORKCHOP.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.COOKED_CHICKEN.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.COOKED_MUTTON.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.COOKED_SALMON.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.COOKED_COD.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.COOKED_RABBIT.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.CHORUS_FLOWER.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.CHORUS_FRUIT.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.CHORUS_PLANT.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.POPPED_CHORUS_FRUIT.asItem(), 3);
+        ComposterBlock.COMPOSTABLES.put(Items.EGG.asItem(), 2);
+        ComposterBlock.COMPOSTABLES.put(Items.PUFFERFISH.asItem(), 2);
     }
 
     private void doClientStuff(FMLClientSetupEvent event) {
         RenderingRegistry.registerEntityRenderingHandler(EntityInit.FOX_MODIFIED.get(), FoxRendererModified::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityInit.POLAR_BEAR_MODIFIED.get(), PolarBearRenderer::new);
     }
 
     private void enqueueIMC(InterModEnqueueEvent event)
@@ -100,6 +130,7 @@ public class CTweaks {
         @SubscribeEvent
         public static void onAttributeCreation(EntityAttributeCreationEvent event) {
             event.put(EntityInit.FOX_MODIFIED.get(), FoxEntityModified.createAttributes().build());
+            event.put(EntityInit.POLAR_BEAR_MODIFIED.get(), PolarBearEntityModified.createAttributes().build());
         }
     }
 }
