@@ -1,6 +1,8 @@
 package com.codinglitch.ctweaks.event;
 
 import com.codinglitch.ctweaks.CTweaks;
+import com.codinglitch.ctweaks.config.ClientConfig;
+import com.codinglitch.ctweaks.config.DisableConfig;
 import com.codinglitch.ctweaks.registry.capabilities.DeathFearProvider;
 import com.codinglitch.ctweaks.registry.capabilities.IDeathFear;
 import com.codinglitch.ctweaks.util.ReferenceC;
@@ -36,8 +38,8 @@ public class ClientEventHandler {
     @SubscribeEvent
     public static void onRenderScreen(RenderGameOverlayEvent.Post event)
     {
-
-        if (event.getType() != RenderGameOverlayEvent.ElementType.VIGNETTE) return;
+        if (ClientConfig.trauma_effect.get()) return;
+        if (event.getType() != RenderGameOverlayEvent.ElementType.AIR) return;
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder renderer = tessellator.getBuilder();
 
@@ -70,10 +72,10 @@ public class ClientEventHandler {
         }
 
         renderer.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
-        renderer.vertex(0.0D, height, -90).color(1,1,1, alpha).uv(0.0F, 1.0F).endVertex();
-        renderer.vertex(width, height, -90).color(1,1,1, alpha).uv(1.0F, 1.0F).endVertex();
-        renderer.vertex(width, 0.0D, -90).color(1,1,1, alpha).uv(1.0F, 0.0F).endVertex();
-        renderer.vertex(0.0D, 0.0D, -90).color(1,1,1, alpha).uv(0.0F, 0.0F).endVertex();
+        renderer.vertex(0.0D, height, -1).color(1,1,1, alpha).uv(0.0F, 1.0F).endVertex();
+        renderer.vertex(width, height, -1).color(1,1,1, alpha).uv(1.0F, 1.0F).endVertex();
+        renderer.vertex(width, 0.0D, -1).color(1,1,1, alpha).uv(1.0F, 0.0F).endVertex();
+        renderer.vertex(0.0D, 0.0D, -1).color(1,1,1, alpha).uv(0.0F, 0.0F).endVertex();
         tessellator.end();
 
         RenderSystem.disableAlphaTest();

@@ -4,8 +4,14 @@ package com.codinglitch.ctweaks.util;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 
@@ -13,6 +19,159 @@ public class UtilityC {
     public static List<Item> registeredCatalysts = new ArrayList<>();
 
     public UtilityC() {
+    }
+
+    public static int getLevelCostFromItems(ItemStack left, ItemStack right)
+    {
+        ItemStack itemstack = left;
+        int cost = 1;
+        int i = 0;
+        int j = 0;
+        int k = 0;
+        if (itemstack.isEmpty()) {
+            cost = 0;
+        } else {
+            ItemStack itemstack1 = itemstack.copy();
+            ItemStack itemstack2 = right;
+            Map<Enchantment, Integer> map = EnchantmentHelper.getEnchantments(itemstack1);
+            j = j + itemstack.getBaseRepairCost() + (itemstack2.isEmpty() ? 0 : itemstack2.getBaseRepairCost());
+            boolean flag = false;
+
+            if (!itemstack2.isEmpty()) {
+                flag = itemstack2.getItem() == Items.ENCHANTED_BOOK && !EnchantedBookItem.getEnchantments(itemstack2).isEmpty();
+                if (itemstack1.isDamageableItem() && itemstack1.getItem().isValidRepairItem(itemstack, itemstack2)) {
+                    int l2 = Math.min(itemstack1.getDamageValue(), itemstack1.getMaxDamage() / 4);
+                    if (l2 <= 0) {
+                        cost = 0;
+                        return cost;
+                    }
+
+                    int i3;
+                    for(i3 = 0; l2 > 0 && i3 < itemstack2.getCount(); ++i3) {
+                        int j3 = itemstack1.getDamageValue() - l2;
+                        itemstack1.setDamageValue(j3);
+                        ++i;
+                        l2 = Math.min(itemstack1.getDamageValue(), itemstack1.getMaxDamage() / 4);
+                    }
+                } else {
+                    if (!flag && (itemstack1.getItem() != itemstack2.getItem() || !itemstack1.isDamageableItem())) {
+                        cost = 0;
+                        return cost;
+                    }
+
+                    if (itemstack1.isDamageableItem() && !flag) {
+                        int l = itemstack.getMaxDamage() - itemstack.getDamageValue();
+                        int i1 = itemstack2.getMaxDamage() - itemstack2.getDamageValue();
+                        int j1 = i1 + itemstack1.getMaxDamage() * 12 / 100;
+                        int k1 = l + j1;
+                        int l1 = itemstack1.getMaxDamage() - k1;
+                        if (l1 < 0) {
+                            l1 = 0;
+                        }
+
+                        if (l1 < itemstack1.getDamageValue()) {
+                            itemstack1.setDamageValue(l1);
+                            i += 2;
+                        }
+                    }
+
+                    Map<Enchantment, Integer> map1 = EnchantmentHelper.getEnchantments(itemstack2);
+                    boolean flag2 = false;
+                    boolean flag3 = false;
+
+                    for(Enchantment enchantment1 : map1.keySet()) {
+                        if (enchantment1 != null) {
+                            int i2 = map.getOrDefault(enchantment1, 0);
+                            int j2 = map1.get(enchantment1);
+                            j2 = i2 == j2 ? j2 + 1 : Math.max(j2, i2);
+                            boolean flag1 = enchantment1.canEnchant(itemstack);
+                            if (itemstack.getItem() == Items.ENCHANTED_BOOK) {
+                                flag1 = true;
+                            }
+
+                            for(Enchantment enchantment : map.keySet()) {
+                                if (enchantment != enchantment1 && !enchantment1.isCompatibleWith(enchantment)) {
+                                    flag1 = false;
+                                    ++i;
+                                }
+                            }
+
+                            if (!flag1) {
+                                flag3 = true;
+                            } else {
+                                flag2 = true;
+                                if (j2 > enchantment1.getMaxLevel()) {
+                                    j2 = enchantment1.getMaxLevel();
+                                }
+
+                                map.put(enchantment1, j2);
+                                int k3 = 0;
+                                switch(enchantment1.getRarity()) {
+                                    case COMMON:
+                                        k3 = 1;
+                                        break;
+                                    case UNCOMMON:
+                                        k3 = 2;
+                                        break;
+                                    case RARE:
+                                        k3 = 4;
+                                        break;
+                                    case VERY_RARE:
+                                        k3 = 8;
+                                }
+
+                                if (flag) {
+                                    k3 = Math.max(1, k3 / 2);
+                                }
+
+                                i += k3 * j2;
+                                if (itemstack.getCount() > 1) {
+                                    i = 40;
+                                }
+                            }
+                        }
+                    }
+
+                    if (flag3 && !flag2) {
+                        cost = 0;
+                        return cost;
+                    }
+                }
+            }
+
+
+            if (flag && !itemstack1.isBookEnchantable(itemstack2)) itemstack1 = ItemStack.EMPTY;
+
+            cost = j + i;
+            if (i <= 0) {
+                itemstack1 = ItemStack.EMPTY;
+            }
+
+            if (k == i && k > 0 && cost >= 40) {
+                cost = 39;
+            }
+
+            if (cost >= 40) {
+                itemstack1 = ItemStack.EMPTY;
+            }
+        }
+        return cost;
+    }
+
+    public static int getExperienceFromLevel(int level)
+    {
+        if (level < 17)
+        {
+            return (int) ((level^2) + 6f * level);
+        }
+        else if (level < 32)
+        {
+            return (int) (2.5f * (level^2) - 40.5f * level + 360f);
+        }
+        else
+        {
+            return (int) (4.5f * (level^2) - 162.5f * level + 2220f);
+        }
     }
 
     public static void registerCatalyst(Item item)

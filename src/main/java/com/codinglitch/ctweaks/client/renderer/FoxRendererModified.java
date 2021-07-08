@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.entity.layers.FoxHeldItemLayer;
 import net.minecraft.client.renderer.entity.layers.WolfCollarLayer;
 import net.minecraft.client.renderer.entity.model.FoxModel;
 import net.minecraft.entity.passive.FoxEntity;
+import net.minecraft.item.MusicDiscItem;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3f;

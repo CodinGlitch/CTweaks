@@ -6,16 +6,25 @@ import com.codinglitch.ctweaks.config.DisableConfig;
 import com.codinglitch.ctweaks.registry.capabilities.DeathFearProvider;
 import com.codinglitch.ctweaks.registry.capabilities.IDeathFear;
 import com.codinglitch.ctweaks.registry.entities.FoxEntityModified;
+import com.codinglitch.ctweaks.registry.entities.PolarBearEntityModified;
 import com.codinglitch.ctweaks.registry.init.EntityInit;
 import com.codinglitch.ctweaks.util.ReferenceC;
+import com.codinglitch.ctweaks.util.SoundsC;
+import com.codinglitch.ctweaks.util.UtilityC;
 import com.codinglitch.ctweaks.util.network.CTweaksPacketHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.FoxEntity;
+import net.minecraft.entity.passive.PolarBearEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.EnchantedBookItem;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.util.DamageSource;
@@ -23,40 +32,96 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.CriticalHitEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.SleepingLocationCheckEvent;
+import net.minecraftforge.event.entity.player.*;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.network.PacketDistributor;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.Random;
+import java.util.*;
 
 @EventBusSubscriber
 public class CommonEventHandler {
     public static Random rand = new Random();
 
+    public static List<UUID> costList = new ArrayList<>();
+
+    public static void setCost(PlayerEntity player)
+    {
+        removeCost(player.getUUID());
+        costList.add(player.getUUID());
+    }
+
+    public static boolean getCost(UUID player)
+    {
+        for (UUID uuid : costList)
+        {
+            if (uuid.equals(player))
+                return true;
+        }
+
+        return false;
+    }
+
+    public static void removeCost(UUID player)
+    {
+        costList.removeIf((uuid) -> uuid.equals(player));
+    }
+
+    @SubscribeEvent
+    public static void onRepair(AnvilRepairEvent event)
+    {
+        int cost = UtilityC.getLevelCostFromItems(event.getItemInput(), event.getIngredientInput());;
+        if (cost != 0)
+        {
+            setCost(event.getPlayer());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLevelChange(PlayerXpEvent.LevelChange event)
+    {
+        if (getCost(event.getPlayer().getUUID()))
+        {
+            removeCost(event.getPlayer().getUUID());
+            event.setCanceled(true);
+            event.getPlayer().giveExperiencePoints(UtilityC.getExperienceFromLevel(event.getLevels()));
+        }
+    }
+
     @SubscribeEvent
     public static void onEntityJoin(EntityJoinWorldEvent event)
     {
-        if (DisableConfig.tame_fox.get()) return;
         if (event.getEntity() instanceof FoxEntity)
         {
+            if (DisableConfig.tame_fox.get()) return;
             event.setCanceled(true);
             FoxEntityModified fox = new FoxEntityModified(EntityInit.FOX_MODIFIED.get(), event.getWorld());
             fox.copyPosition(event.getEntity());
             event.getWorld().addFreshEntity(fox);
+        }
+        else if (event.getEntity().getClass() == PolarBearEntity.class)
+        {
+            if (DisableConfig.mount_polar_bear.get()) return;
+            event.setCanceled(true);
+            PolarBearEntityModified bear = new PolarBearEntityModified(EntityInit.POLAR_BEAR_MODIFIED.get(), event.getWorld());
+            bear.copyPosition(event.getEntity());
+            bear.setBaby(((PolarBearEntity)event.getEntity()).isBaby());
+            event.getWorld().addFreshEntity(bear);
         }
     }
 
@@ -107,7 +172,7 @@ public class CommonEventHandler {
             {
                 death += event.getSource().getEntity().getName().getString().toLowerCase();
             }
-            if (event.getSource().isExplosion())
+            if (event.getSource().isExplosion() & event.getSource().getEntity() != null)
             {
                 death = "explosion" + event.getSource().getEntity().getName().getString().toLowerCase();
             }
@@ -272,6 +337,8 @@ public class CommonEventHandler {
                     if (player.tickCount % 2 == 0)
                     {
                         player.setAirSupply(player.getAirSupply()-1);
+                        cap.setFearCounter(200);
+                        cap.setMaxFearCounter(200);
                     }
                 }
             }
