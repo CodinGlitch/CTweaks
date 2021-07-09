@@ -13,7 +13,10 @@ import com.codinglitch.ctweaks.util.SoundsC;
 import com.codinglitch.ctweaks.util.UtilityC;
 import com.codinglitch.ctweaks.util.network.CTweaksPacketHandler;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.CauldronBlock;
+import net.minecraft.client.gui.screen.EnchantmentScreen;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
@@ -22,17 +25,19 @@ import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.passive.PolarBearEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.container.EnchantmentContainer;
 import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
-import net.minecraft.util.DamageSource;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvents;
+import net.minecraft.stats.Stats;
+import net.minecraft.tileentity.EnchantingTableTileEntity;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.world.World;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.common.util.LazyOptional;
@@ -44,6 +49,7 @@ import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.*;
+import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
@@ -58,28 +64,28 @@ import java.util.*;
 public class CommonEventHandler {
     public static Random rand = new Random();
 
-    public static List<UUID> costList = new ArrayList<>();
+    public static List<Pair<UUID, String>> costList = new ArrayList<>();
 
-    public static void setCost(PlayerEntity player)
+    public static void setCost(PlayerEntity player, String type)
     {
         removeCost(player.getUUID());
-        costList.add(player.getUUID());
+        costList.add(Pair.of(player.getUUID(),type));
     }
 
-    public static boolean getCost(UUID player)
+    public static String getCost(UUID player)
     {
-        for (UUID uuid : costList)
+        for (Pair<UUID, String> pair : costList)
         {
-            if (uuid.equals(player))
-                return true;
+            if (pair.getKey().equals(player))
+                return pair.getValue();
         }
 
-        return false;
+        return "";
     }
 
     public static void removeCost(UUID player)
     {
-        costList.removeIf((uuid) -> uuid.equals(player));
+        costList.removeIf((pair) -> pair.getKey().equals(player));
     }
 
     @SubscribeEvent
@@ -88,16 +94,100 @@ public class CommonEventHandler {
         int cost = UtilityC.getLevelCostFromItems(event.getItemInput(), event.getIngredientInput());;
         if (cost != 0)
         {
-            setCost(event.getPlayer());
+            setCost(event.getPlayer(), "anvil");
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event)
+    {
+        removeCost(event.getPlayer().getUUID());
+    }
+
+    @SubscribeEvent
+    public static void onContainerClose(PlayerContainerEvent.Close event)
+    {
+        if (event.getContainer() instanceof EnchantmentContainer)
+        {
+            removeCost(event.getPlayer().getUUID());
+        }
+    }
+
+    @SubscribeEvent
+    public static void onInteract(PlayerInteractEvent.RightClickBlock event)
+    {
+        BlockPos pos = event.getHitVec().getBlockPos();
+        BlockState blockState = event.getWorld().getBlockState(pos);
+        TileEntity tileEntity = event.getWorld().getBlockEntity(pos);
+        if (tileEntity instanceof EnchantingTableTileEntity)
+        {
+            setCost(event.getPlayer(), "enchant");
+        }
+        else if (blockState.getBlock() instanceof CauldronBlock)
+        {
+            if (event.getPlayer().isCrouching()) return;
+            int i = blockState.getValue(CauldronBlock.LEVEL);
+            PlayerEntity player = event.getPlayer();
+            World world = player.level;
+            Hand hand = event.getHand();
+            ItemStack itemstack = event.getPlayer().getItemInHand(hand);
+            CauldronBlock block = (CauldronBlock) blockState.getBlock();
+
+            if (itemstack.getItem() == Items.SPONGE)
+            {
+                if (i == 3) {
+                    event.setCanceled(true);
+                    if (!world.isClientSide)
+                    {
+                        if (!player.abilities.instabuild) {
+                            itemstack.shrink(1);
+                            if (itemstack.isEmpty()) {
+                                player.setItemInHand(hand, new ItemStack(Items.WET_SPONGE));
+                            } else if (!player.inventory.add(new ItemStack(Items.WET_SPONGE))) {
+                                player.drop(new ItemStack(Items.WET_SPONGE), false);
+                            }
+                        }
+
+                        player.awardStat(Stats.USE_CAULDRON);
+                        block.setWaterLevel(world, pos, blockState, 0);
+                        world.playSound(null, pos, SoundsC.sponge.get(), SoundCategory.BLOCKS, 1.0F, 1.0F);
+                    }
+
+                }
+            }
+            else if (itemstack.getItem() == Items.WET_SPONGE)
+            {
+                if (i < 3) {
+                    event.setCanceled(true);
+                    if (!world.isClientSide)
+                    {
+                        if (!player.abilities.instabuild) {
+                            itemstack.shrink(1);
+                            if (itemstack.isEmpty()) {
+                                player.setItemInHand(hand, new ItemStack(Items.SPONGE));
+                            } else if (!player.inventory.add(new ItemStack(Items.SPONGE))) {
+                                player.drop(new ItemStack(Items.SPONGE), false);
+                            }
+                        }
+
+                        player.awardStat(Stats.FILL_CAULDRON);
+                        block.setWaterLevel(world, pos, blockState, 3);
+                        world.playSound(null, pos, SoundsC.wet_sponge.get(), SoundCategory.BLOCKS, 1.0F, 1.0F);
+                    }
+                }
+            }
         }
     }
 
     @SubscribeEvent
     public static void onLevelChange(PlayerXpEvent.LevelChange event)
     {
-        if (getCost(event.getPlayer().getUUID()))
+        String cost = getCost(event.getPlayer().getUUID());
+        if (!cost.equals(""))
         {
-            removeCost(event.getPlayer().getUUID());
+            if (cost.equals("anvil"))
+                removeCost(event.getPlayer().getUUID());
+
             event.setCanceled(true);
             event.getPlayer().giveExperiencePoints(UtilityC.getExperienceFromLevel(event.getLevels()));
         }

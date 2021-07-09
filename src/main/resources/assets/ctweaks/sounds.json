@@ -14,5 +14,21 @@
         "stream": true
       }
     ]
+  },
+  "wet_sponge": {
+    "sounds": [
+      {
+        "name": "ctweaks:block/wet_sponge",
+        "stream": true
+      }
+    ]
+  },
+  "sponge": {
+    "sounds": [
+      {
+        "name": "ctweaks:block/sponge",
+        "stream": true
+      }
+    ]
   }
 }

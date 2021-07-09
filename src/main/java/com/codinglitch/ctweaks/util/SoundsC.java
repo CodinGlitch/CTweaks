@@ -26,4 +26,6 @@ public class SoundsC {
     }
 
     public static RegistryObject<SoundEvent> fox_squeak = registerSound("fox_squeak");
+    public static RegistryObject<SoundEvent> wet_sponge = registerSound("wet_sponge");
+    public static RegistryObject<SoundEvent> sponge = registerSound("sponge");
 }
