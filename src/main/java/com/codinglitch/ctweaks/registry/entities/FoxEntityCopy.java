@@ -82,6 +82,7 @@ public class FoxEntityCopy extends TameableEntity {
     private float crouchAmount;
     private float crouchAmountO;
     private int ticksSinceEaten;
+    public int ticksSinceGifted;
     private boolean isImportant;
 
     private LivingEntity ignoreStalk;
@@ -148,6 +149,7 @@ public class FoxEntityCopy extends TameableEntity {
     public void aiStep() {
         if (!this.level.isClientSide && this.isAlive() && this.isEffectiveAi()) {
             ++this.ticksSinceEaten;
+            ++this.ticksSinceGifted;
             ItemStack itemstack = this.getItemBySlot(EquipmentSlotType.MAINHAND);
             if (this.canEat(itemstack)) {
                 if (this.ticksSinceEaten > 600) {
@@ -1305,6 +1307,7 @@ public class FoxEntityCopy extends TameableEntity {
             } else {
                 if (FoxEntityCopy.this.isSitting())
                 {
+                    if (!FoxEntityCopy.this.isSleeping()) return false;
                     if (!this.hasShelter())
                     {
                         FoxEntityCopy.this.wakeUp();
@@ -1321,7 +1324,6 @@ public class FoxEntityCopy extends TameableEntity {
         }
 
         public void start() {
-            FoxEntityCopy.this.setSitting(true);
             FoxEntityCopy.this.setIsCrouching(false);
             FoxEntityCopy.this.setIsInterested(false);
             FoxEntityCopy.this.setJumping(false);
