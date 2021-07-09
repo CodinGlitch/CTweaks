@@ -71,7 +71,8 @@ public class PolarBearEntityModified extends PolarBearEntity implements IJumping
 
     @Override
     public ActionResultType mobInteract(PlayerEntity player, Hand hand) {
-        if (!this.isBaby() & !this.isAngry()) {
+        boolean flag = this.isAngryAt(player);
+        if (!this.isBaby() & !flag & !this.level.isClientSide) {
             this.doPlayerRide(player);
             return ActionResultType.sidedSuccess(this.level.isClientSide);
         }

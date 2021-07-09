@@ -2,6 +2,7 @@ package com.codinglitch.ctweaks.registry.entities;
 
 import com.codinglitch.ctweaks.util.ReferenceC;
 import com.codinglitch.ctweaks.util.SoundsC;
+import net.minecraft.client.renderer.entity.GiantZombieRenderer;
 import net.minecraft.client.renderer.entity.WolfRenderer;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -38,6 +39,24 @@ public class FoxEntityModified extends FoxEntityCopy {
 
     public DyeColor getCollarColor() {
         return DyeColor.RED;
+    }
+
+    @Override
+    protected void registerGoals() {
+        super.registerGoals();
+        this.goalSelector.addGoal(7, new FoxEntityCopy.SleepGoal());
+    }
+
+    public class SleepGoal extends FoxEntityCopy.SleepGoal
+    {
+        @Override
+        public void stop() {
+            super.stop();
+            if (!FoxEntityModified.this.isOrderedToSit())
+            {
+                FoxEntityModified.this.setSitting(FoxEntityModified.this.isOrderedToSit());
+            }
+        }
     }
 
     @Override

@@ -128,7 +128,6 @@ public class FoxEntityCopy extends TameableEntity {
         this.goalSelector.addGoal(6, new PounceGoal());
         this.goalSelector.addGoal(6, new FindShelterGoal(1.25D));
         this.goalSelector.addGoal(7, new BiteGoal((double)1.2F, true));
-        this.goalSelector.addGoal(7, new SleepGoal());
         this.goalSelector.addGoal(8, new FollowGoal(this, 1.25D));
         this.goalSelector.addGoal(9, new StrollGoal(32, 200));
         this.goalSelector.addGoal(10, new EatBerriesGoal((double)1.2F, 12, 2));
