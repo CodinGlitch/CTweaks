@@ -8,38 +8,42 @@ import com.codinglitch.ctweaks.registry.capabilities.IDeathFear;
 import com.codinglitch.ctweaks.registry.entities.FoxEntityModified;
 import com.codinglitch.ctweaks.registry.entities.PolarBearEntityModified;
 import com.codinglitch.ctweaks.registry.init.EntityInit;
+import com.codinglitch.ctweaks.registry.init.ItemsInit;
+import com.codinglitch.ctweaks.registry.items.ScytheItem;
 import com.codinglitch.ctweaks.util.ReferenceC;
 import com.codinglitch.ctweaks.util.SoundsC;
 import com.codinglitch.ctweaks.util.UtilityC;
 import com.codinglitch.ctweaks.util.network.CTweaksPacketHandler;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.CauldronBlock;
+import net.minecraft.block.*;
 import net.minecraft.client.gui.screen.EnchantmentScreen;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.passive.PolarBearEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.EnchantmentContainer;
-import net.minecraft.item.EnchantedBookItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.item.*;
+import net.minecraft.loot.LootContext;
+import net.minecraft.loot.LootParameters;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.stats.Stats;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.EnchantingTableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
+import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -88,10 +92,106 @@ public class CommonEventHandler {
         costList.removeIf((pair) -> pair.getKey().equals(player));
     }
 
+    public static ItemStack getRotten(ItemStack stack)
+    {
+        if (stack.getItem() == Items.WHEAT)
+            return new ItemStack(ItemsInit.WILTED_WHEAT.get(), stack.getCount());
+        if (stack.getItem() == Items.POTATO)
+            return new ItemStack(Items.POISONOUS_POTATO, stack.getCount());
+        if (stack.getItem() == Items.CARROT)
+            return new ItemStack(ItemsInit.CRUMBLING_CARROT.get(), stack.getCount());
+        return ItemStack.EMPTY;
+    }
+
+    @SubscribeEvent
+    public static void breakSpeed(PlayerEvent.BreakSpeed event)
+    {
+        World level = event.getEntity().level;
+        if (level.isClientSide) return;
+        BlockPos blockPos = event.getPos();
+        BlockState blockState = event.getState();
+
+        ItemStack itemStack = ItemStack.EMPTY;
+
+        if (blockState.getBlock() == Blocks.WHEAT)
+        {
+            itemStack = new ItemStack(Items.WHEAT);
+        }
+        else if (blockState.getBlock() == Blocks.POTATOES)
+        {
+            itemStack = new ItemStack(Items.POTATO);
+        }
+        else if (blockState.getBlock() == Blocks.CARROTS)
+        {
+            itemStack = new ItemStack(Items.CARROT);
+        }
+
+        if (itemStack.isEmpty()) return;
+
+        boolean isHoldingScythe = event.getPlayer().getMainHandItem().getItem() instanceof ScytheItem;
+
+        TileEntity tileentity = blockState.hasTileEntity() ? level.getBlockEntity(blockPos) : null;
+
+        LootContext.Builder lootcontext = (new LootContext.Builder((ServerWorld)level))
+                .withRandom(level.random)
+                .withParameter(LootParameters.ORIGIN, Vector3d.atCenterOf(blockPos))
+                .withParameter(LootParameters.TOOL, ItemStack.EMPTY)
+                .withOptionalParameter(LootParameters.BLOCK_ENTITY, tileentity)
+                .withOptionalParameter(LootParameters.THIS_ENTITY, event.getEntityLiving());
+
+        List<ItemStack> drops = blockState.getDrops(lootcontext);
+
+        if (blockState.getBlock() instanceof CropsBlock) {
+            CropsBlock cropsblock = (CropsBlock) blockState.getBlock();
+            if (!cropsblock.isMaxAge(blockState)) {
+                for (ItemStack drop : drops) {
+                    level.addFreshEntity(new ItemEntity(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), drop));
+                }
+                return;
+            }
+        }
+
+        int am = 0;
+
+        for (ItemStack drop : drops) {
+            if (drop.getItem() == itemStack.getItem())
+            {
+                am++;
+                continue;
+            }
+            level.addFreshEntity(new ItemEntity(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), drop));
+        }
+
+
+        for (int o = 0; o < am; o++) {
+            int amount = 1;
+            if (level.random.nextInt(3)==0 & isHoldingScythe) amount = 2;
+            for (int i = 0; i < amount; i++) {
+                if (level.random.nextInt(10)==0) itemStack = getRotten(itemStack);
+                level.addFreshEntity(new ItemEntity(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), itemStack));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onHarvest(PlayerEvent.HarvestCheck event)
+    {
+        boolean cancel = false;
+
+        if (
+                event.getTargetBlock().getBlock() == Blocks.WHEAT |
+                event.getTargetBlock().getBlock() == Blocks.POTATOES |
+                event.getTargetBlock().getBlock() == Blocks.CARROTS
+        )
+            cancel = true;
+
+        if (cancel) event.setCanHarvest(false);
+    }
+
     @SubscribeEvent
     public static void onRepair(AnvilRepairEvent event)
     {
-        int cost = UtilityC.getLevelCostFromItems(event.getItemInput(), event.getIngredientInput());;
+        int cost = UtilityC.getLevelCostFromItems(event.getItemInput(), event.getIngredientInput());
         if (cost != 0)
         {
             setCost(event.getPlayer(), "anvil");
