@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "ctweaks:item/scythe/wooden_scythe"
+  }
+}

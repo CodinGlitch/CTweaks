@@ -1,4 +1,12 @@
 {
   "entity.ctweaks.fox": "Fox",
-  "entity.ctweaks.polar_bear": "Polar Bear"
+  "entity.ctweaks.polar_bear": "Polar Bear",
+  "item.ctweaks.crumbling_carrot": "Crumbling Carrot",
+  "item.ctweaks.wilted_wheat": "Wilted Wheat",
+  "item.ctweaks.wooden_scythe": "Wooden Scythe",
+  "item.ctweaks.stone_scythe": "Stone Scythe",
+  "item.ctweaks.iron_scythe": "Iron Scythe",
+  "item.ctweaks.golden_scythe": "Golden Scythe",
+  "item.ctweaks.diamond_scythe": "Diamond Scythe",
+  "item.ctweaks.netherite_scythe": "Netherite Scythe"
 }
