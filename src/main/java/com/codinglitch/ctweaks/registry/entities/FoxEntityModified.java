@@ -107,7 +107,6 @@ public class FoxEntityModified extends FoxEntityCopy {
             ticksSinceGifted = 0;
             this.oldWaterCost = FoxEntityModified.this.getPathfindingMalus(PathNodeType.WATER);
             FoxEntityModified.this.setPathfindingMalus(PathNodeType.WATER, 0.0F);
-            CTweaks.logger.info("start");
         }
 
         @Override
