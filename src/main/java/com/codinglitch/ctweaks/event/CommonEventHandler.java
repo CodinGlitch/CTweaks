@@ -15,9 +15,6 @@ import com.codinglitch.ctweaks.util.SoundsC;
 import com.codinglitch.ctweaks.util.UtilityC;
 import com.codinglitch.ctweaks.util.network.CTweaksPacketHandler;
 import net.minecraft.block.*;
-import net.minecraft.client.gui.screen.EnchantmentScreen;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.ItemEntity;
@@ -26,13 +23,13 @@ import net.minecraft.entity.passive.PolarBearEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.EnchantmentContainer;
-import net.minecraft.item.*;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.loot.LootContext;
 import net.minecraft.loot.LootParameters;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.stats.Stats;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.tileentity.EnchantingTableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
@@ -40,12 +37,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.client.event.ClientChatEvent;
-import net.minecraftforge.client.event.sound.PlaySoundEvent;
-import net.minecraftforge.common.Tags;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
@@ -53,16 +48,19 @@ import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.*;
-import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.network.PacketDistributor;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 
 @EventBusSubscriber
 public class CommonEventHandler {
@@ -165,9 +163,9 @@ public class CommonEventHandler {
 
         for (int o = 0; o < am; o++) {
             int amount = 1;
-            if (level.random.nextInt(3)==0 & isHoldingScythe) amount = 2;
+            if (level.random.nextInt(3)==0 & isHoldingScythe & !DisableConfig.scythes.get()) amount = 2;
             for (int i = 0; i < amount; i++) {
-                if (level.random.nextInt(10)==0) itemStack = getRotten(itemStack);
+                if (level.random.nextInt(10)==0 & !DisableConfig.rotten_variant.get()) itemStack = getRotten(itemStack);
                 level.addFreshEntity(new ItemEntity(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), itemStack));
             }
         }
@@ -191,6 +189,7 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onRepair(AnvilRepairEvent event)
     {
+        if (DisableConfig.enchantingpatch.get()) return;
         int cost = UtilityC.getLevelCostFromItems(event.getItemInput(), event.getIngredientInput());
         if (cost != 0)
         {
@@ -201,12 +200,14 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event)
     {
+        if (DisableConfig.enchantingpatch.get()) return;
         removeCost(event.getPlayer().getUUID());
     }
 
     @SubscribeEvent
     public static void onContainerClose(PlayerContainerEvent.Close event)
     {
+        if (DisableConfig.enchantingpatch.get()) return;
         if (event.getContainer() instanceof EnchantmentContainer)
         {
             removeCost(event.getPlayer().getUUID());
@@ -216,6 +217,7 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onInteract(PlayerInteractEvent.RightClickBlock event)
     {
+        if (DisableConfig.enchantingpatch.get()) return;
         BlockPos pos = event.getHitVec().getBlockPos();
         BlockState blockState = event.getWorld().getBlockState(pos);
         TileEntity tileEntity = event.getWorld().getBlockEntity(pos);
@@ -282,6 +284,7 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onLevelChange(PlayerXpEvent.LevelChange event)
     {
+        if (DisableConfig.enchantingpatch.get()) return;
         String cost = getCost(event.getPlayer().getUUID());
         if (!cost.equals(""))
         {
@@ -294,15 +297,23 @@ public class CommonEventHandler {
     }
 
     @SubscribeEvent
-    public static void onEntityJoin(EntityJoinWorldEvent event)
-    {
+    public static void onEntityJoin(EntityJoinWorldEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        if (event.getEntity() instanceof FoxEntityModified) return;
+        if (event.getEntity() instanceof PolarBearEntityModified) return;
+
+        if (event.getWorld().isClientSide) return;
+
         if (event.getEntity() instanceof FoxEntity)
         {
             if (DisableConfig.tame_fox.get()) return;
             event.setCanceled(true);
             FoxEntityModified fox = new FoxEntityModified(EntityInit.FOX_MODIFIED.get(), event.getWorld());
             fox.copyPosition(event.getEntity());
-            event.getWorld().addFreshEntity(fox);
+            fox.setPos(event.getEntity().position().x, event.getEntity().position().y, event.getEntity().position().z);
+            fox.forcedLoading = true;
+            Method method = event.getWorld().getClass().getDeclaredMethod("add", Entity.class);
+            method.setAccessible(true);
+            method.invoke(event.getWorld(), fox);
         }
         else if (event.getEntity().getClass() == PolarBearEntity.class)
         {
@@ -311,7 +322,9 @@ public class CommonEventHandler {
             PolarBearEntityModified bear = new PolarBearEntityModified(EntityInit.POLAR_BEAR_MODIFIED.get(), event.getWorld());
             bear.copyPosition(event.getEntity());
             bear.setBaby(((PolarBearEntity)event.getEntity()).isBaby());
-            event.getWorld().addFreshEntity(bear);
+            Method method = event.getWorld().getClass().getDeclaredMethod("add", Entity.class);
+            method.setAccessible(true);
+            method.invoke(event.getWorld(), bear);
         }
     }
 
@@ -368,6 +381,7 @@ public class CommonEventHandler {
             }
 
             cap.setFear(death);
+            cap.setTickWhenTraumatized(event.getEntity().level.getGameTime());
         }
     }
 
@@ -400,6 +414,7 @@ public class CommonEventHandler {
         {
             IDeathFear cap = capability1.orElseThrow(IllegalArgumentException::new);
             cap.setFear(fear);
+            cap.setTickWhenTraumatized(to.level.getGameTime());
         }
     }
 
@@ -432,6 +447,21 @@ public class CommonEventHandler {
 
             String fear = cap.getFear();
 
+            if (fear.startsWith("mob"))
+            {
+                if (event.getSource().msgId.equals("mob"))
+                {
+                    player.disableShield(true);
+                    if (event.getAmount() < 0.1f) return;
+                    player.addEffect(new EffectInstance(Effects.WEAKNESS, 15, 2));
+                    cap.setFearCounter(200);
+                    cap.setMaxFearCounter(200);
+                }
+
+                String mob = fear.substring(3);
+
+            }
+
             if (fear.equals("arrow"))
             {
                 if (event.getSource().msgId.equals("arrow"))
@@ -440,19 +470,6 @@ public class CommonEventHandler {
                     cap.setFearCounter(200);
                     cap.setMaxFearCounter(200);
                 }
-            }
-            else if (fear.startsWith("mob"))
-            {
-                if (event.getSource().msgId.equals("mob"))
-                {
-                    player.addEffect(new EffectInstance(Effects.WEAKNESS, 40, 2));
-                    cap.setFearCounter(200);
-                    cap.setMaxFearCounter(200);
-                    player.disableShield(true);
-                }
-
-                String mob = fear.substring(3);
-
             }
         }
     }
@@ -486,7 +503,12 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onChat(ClientChatEvent event)
     {
-        //event.setMessage(event.getMessage().replaceAll("", "\\u00A7ka"));
+        /*if (event.getMessage().startsWith("/")) return;
+        StringTextComponent component = (StringTextComponent) new StringTextComponent(event.getMessage().replaceAll("", "\\u00A7ka")).setStyle(
+                Style.EMPTY.setObfuscated(true)
+        );
+        event.setCanceled(true);
+        Minecraft.getInstance().player.se(component, Minecraft.getInstance().player.getUUID());*/
     }
 
     @SubscribeEvent
@@ -501,7 +523,19 @@ public class CommonEventHandler {
         if (capability.isPresent())
         {
             IDeathFear cap = capability.orElseThrow(IllegalArgumentException::new);
+
             String fear = cap.getFear();
+
+            if (event.player.level.getGameTime() - cap.getTickWhenTraumatized() > 40000)
+            {
+                if (!cap.getFear().equals(""))
+                {
+                    cap.setFear("");
+                    if (!event.player.level.isClientSide)
+                        CTweaksPacketHandler.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new CTweaksPacketHandler.DisplayClientMessage("ctweaks.message.calm"));
+                }
+                return;
+            }
 
             if (cap.getFearCounter() > 0)
             {
