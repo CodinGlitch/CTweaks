@@ -12,6 +12,7 @@ public class DeathFearStorage implements Capability.IStorage<IDeathFear> {
         nbt.putString("fear", instance.getFear());
         nbt.putInt("counter", instance.getFearCounter());
         nbt.putInt("maxcounter", instance.getMaxFearCounter());
+        nbt.putLong("traumatizedwhen", instance.getTickWhenTraumatized());
         return nbt;
     }
 
@@ -21,5 +22,6 @@ public class DeathFearStorage implements Capability.IStorage<IDeathFear> {
         instance.setFear(compound.getString("fear"));
         instance.setFearCounter(compound.getInt("counter"));
         instance.setMaxFearCounter(compound.getInt("maxcounter"));
+        instance.setTickWhenTraumatized(compound.getLong("traumatizedwhen"));
     }
 }

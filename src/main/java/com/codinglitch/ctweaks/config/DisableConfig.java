@@ -7,6 +7,9 @@ public class DisableConfig {
     public static ForgeConfigSpec.BooleanValue trauma;
     public static ForgeConfigSpec.BooleanValue tame_fox;
     public static ForgeConfigSpec.BooleanValue mount_polar_bear;
+    public static ForgeConfigSpec.BooleanValue rotten_variant;
+    public static ForgeConfigSpec.BooleanValue scythes;
+    public static ForgeConfigSpec.BooleanValue enchantingpatch;
 
     public static void init(ForgeConfigSpec.Builder common)
     {
@@ -21,11 +24,25 @@ public class DisableConfig {
                 .define("features.trauma", false);
 
         tame_fox = common
-                .comment("Disable tameable foxes (will require world restart)")
+                .comment("Disable tameable foxes (will require world restart if you have found a fox)")
+                .comment("(else kill the fox before disabling)")
                 .define("features.tame_fox", false);
 
         mount_polar_bear = common
-                .comment("Disable mountable polar bears (will require world restart)")
+                .comment("Disable mountable polar bears (will require world restart if you have found a polar bear)")
+                .comment("(else kill the polar bear before disabling)")
                 .define("features.mount_polar_bear", false);
+
+        rotten_variant = common
+                .comment("Disable the rotten variant of crops")
+                .define("features.rotten", false);
+
+        scythes = common
+                .comment("Disable scythes")
+                .define("features.scythes", false);
+
+        enchantingpatch = common
+                .comment("Disable the enchanting patch with anvils and enchanting tables")
+                .define("features.enchanting", false);
     }
 }

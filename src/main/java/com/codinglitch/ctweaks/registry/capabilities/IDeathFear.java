@@ -9,4 +9,7 @@ public interface IDeathFear {
 
     int getMaxFearCounter();
     void setMaxFearCounter(int maxcounter);
+
+    long getTickWhenTraumatized();
+    void setTickWhenTraumatized(long tickWhenTraumatized);
 }

@@ -4,6 +4,7 @@ public class DeathFear implements IDeathFear {
     private String fear = "";
     private int fearCounter = 0;
     private int maxFearCounter = 0;
+    private long tickWhenTraumatized = 0;
 
     @Override
     public String getFear() {
@@ -27,11 +28,21 @@ public class DeathFear implements IDeathFear {
 
     @Override
     public int getMaxFearCounter() {
-        return fearCounter;
+        return maxFearCounter;
     }
 
     @Override
     public void setMaxFearCounter(int maxcounter) {
         this.maxFearCounter = maxcounter;
+    }
+
+    @Override
+    public long getTickWhenTraumatized() {
+        return tickWhenTraumatized;
+    }
+
+    @Override
+    public void setTickWhenTraumatized(long tickWhenTraumatized) {
+        this.tickWhenTraumatized = tickWhenTraumatized;
     }
 }

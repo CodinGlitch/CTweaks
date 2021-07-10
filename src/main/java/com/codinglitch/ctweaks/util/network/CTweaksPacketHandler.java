@@ -4,8 +4,10 @@ import com.codinglitch.ctweaks.registry.capabilities.DeathFearProvider;
 import com.codinglitch.ctweaks.registry.capabilities.IDeathFear;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -27,8 +29,40 @@ public class CTweaksPacketHandler {
 
     public static void init()
     {
+        INSTANCE.registerMessage(discriminator, DisplayClientMessage.class, DisplayClientMessage::encode, DisplayClientMessage::new, DisplayClientMessage::handle);
+        discriminator++;
         INSTANCE.registerMessage(discriminator, SyncFear.class, SyncFear::encode, SyncFear::new, SyncFear::handle);
         discriminator++;
+    }
+
+    public static class DisplayClientMessage
+    {
+        private String msg = "";
+
+        DisplayClientMessage(final PacketBuffer packetBuffer) {
+            this.msg = packetBuffer.readUtf();
+        }
+
+        public DisplayClientMessage(String msg) {
+            this.msg = msg;
+        }
+
+        void encode(final PacketBuffer packetBuffer) {
+            packetBuffer.writeUtf(msg);
+        }
+
+
+        public static void handle(DisplayClientMessage msg, Supplier<NetworkEvent.Context> ctx) {
+            NetworkEvent.Context context = ctx.get();
+            if (context.getDirection().getReceptionSide() == LogicalSide.CLIENT) {
+                ctx.get().enqueueWork(() -> {
+                    ClientPlayerEntity player = Minecraft.getInstance().player;
+
+                    player.displayClientMessage(new StringTextComponent(I18n.get(msg.msg)), true);
+                });
+                ctx.get().setPacketHandled(true);
+            }
+        }
     }
 
     public static class SyncFear
