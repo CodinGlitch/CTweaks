@@ -296,7 +296,7 @@ public class FoxEntityCopy extends TameableEntity {
         return Type.byId(this.entityData.get(DATA_TYPE_ID));
     }
 
-    private void setFoxType(Type p_213474_1_) {
+    public void setFoxType(Type p_213474_1_) {
         this.entityData.set(DATA_TYPE_ID, p_213474_1_.getId());
     }
 

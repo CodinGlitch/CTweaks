@@ -15,6 +15,26 @@
       }
     ]
   },
+  "illusioner_attack": {
+    "sounds": [
+      {
+        "name": "ctweaks:illusioner/prepare_attack1",
+        "stream": true
+      },
+      {
+        "name": "ctweaks:illusioner/prepare_attack2",
+        "stream": true
+      }
+    ]
+  },
+  "illusioner_geyser": {
+    "sounds": [
+      {
+        "name": "ctweaks:illusioner/geyser",
+        "stream": true
+      }
+    ]
+  },
   "wet_sponge": {
     "sounds": [
       {

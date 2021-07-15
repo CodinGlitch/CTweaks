@@ -12,8 +12,12 @@ import net.minecraft.item.EnchantedBookItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.biome.Biome;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class UtilityC {
     public static List<Item> registeredCatalysts = new ArrayList<>();
@@ -162,15 +166,15 @@ public class UtilityC {
     {
         if (level < 17)
         {
-            return (int) ((level^2) + 6f * level);
+            return (int) (Math.pow(level, 2D) + (6f * level));
         }
         else if (level < 32)
         {
-            return (int) (2.5f * (level^2) - 40.5f * level + 360f);
+            return (int) (2.5f * Math.pow(level, 2D) - 40.5f * level + 360f);
         }
         else
         {
-            return (int) (4.5f * (level^2) - 162.5f * level + 2220f);
+            return (int) (4.5f * Math.pow(level, 2D) - 162.5f * level + 2220f);
         }
     }
 

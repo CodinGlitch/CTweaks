@@ -5,7 +5,9 @@ import com.codinglitch.ctweaks.CTweaks;
 import com.codinglitch.ctweaks.config.DisableConfig;
 import com.codinglitch.ctweaks.registry.capabilities.DeathFearProvider;
 import com.codinglitch.ctweaks.registry.capabilities.IDeathFear;
+import com.codinglitch.ctweaks.registry.entities.FoxEntityCopy;
 import com.codinglitch.ctweaks.registry.entities.FoxEntityModified;
+import com.codinglitch.ctweaks.registry.entities.IllusionerModified;
 import com.codinglitch.ctweaks.registry.entities.PolarBearEntityModified;
 import com.codinglitch.ctweaks.registry.init.EntityInit;
 import com.codinglitch.ctweaks.registry.init.ItemsInit;
@@ -15,18 +17,30 @@ import com.codinglitch.ctweaks.util.SoundsC;
 import com.codinglitch.ctweaks.util.UtilityC;
 import com.codinglitch.ctweaks.util.network.CTweaksPacketHandler;
 import net.minecraft.block.*;
+import net.minecraft.client.particle.TotemOfUndyingParticle;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityClassification;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.monster.IllusionerEntity;
 import net.minecraft.entity.passive.FoxEntity;
+import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.entity.passive.PolarBearEntity;
+import net.minecraft.entity.passive.horse.HorseEntity;
+import net.minecraft.entity.passive.horse.ZombieHorseEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.inventory.container.EnchantmentContainer;
+import net.minecraft.inventory.container.RepairContainer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.loot.LootContext;
 import net.minecraft.loot.LootParameters;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.play.server.SSetExperiencePacket;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
 import net.minecraft.stats.Stats;
@@ -37,6 +51,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.MobSpawnInfo;
 import net.minecraft.world.gen.ChunkGenerator;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.client.event.ClientChatEvent;
@@ -44,23 +59,27 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.EntityStruckByLightningEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingSpawnEvent;
 import net.minecraftforge.event.entity.player.*;
+import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 import net.minecraftforge.fml.network.PacketDistributor;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.core.jmx.Server;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @EventBusSubscriber
 public class CommonEventHandler {
@@ -187,17 +206,6 @@ public class CommonEventHandler {
     }
 
     @SubscribeEvent
-    public static void onRepair(AnvilRepairEvent event)
-    {
-        if (DisableConfig.enchantingpatch.get()) return;
-        int cost = UtilityC.getLevelCostFromItems(event.getItemInput(), event.getIngredientInput());
-        if (cost != 0)
-        {
-            setCost(event.getPlayer(), "anvil");
-        }
-    }
-
-    @SubscribeEvent
     public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event)
     {
         if (DisableConfig.enchantingpatch.get()) return;
@@ -208,7 +216,7 @@ public class CommonEventHandler {
     public static void onContainerClose(PlayerContainerEvent.Close event)
     {
         if (DisableConfig.enchantingpatch.get()) return;
-        if (event.getContainer() instanceof EnchantmentContainer)
+        if (event.getContainer() instanceof EnchantmentContainer | event.getContainer() instanceof RepairContainer)
         {
             removeCost(event.getPlayer().getUUID());
         }
@@ -217,13 +225,20 @@ public class CommonEventHandler {
     @SubscribeEvent
     public static void onInteract(PlayerInteractEvent.RightClickBlock event)
     {
-        if (DisableConfig.enchantingpatch.get()) return;
         BlockPos pos = event.getHitVec().getBlockPos();
         BlockState blockState = event.getWorld().getBlockState(pos);
         TileEntity tileEntity = event.getWorld().getBlockEntity(pos);
         if (tileEntity instanceof EnchantingTableTileEntity)
         {
+            if (event.getEntity().level.isClientSide) return;
+            if (DisableConfig.enchantingpatch.get()) return;
             setCost(event.getPlayer(), "enchant");
+        }
+        else if (blockState.getBlock() instanceof AnvilBlock)
+        {
+            if (event.getEntity().level.isClientSide) return;
+            if (DisableConfig.enchantingpatch.get()) return;
+            setCost(event.getPlayer(), "anvil");
         }
         else if (blockState.getBlock() instanceof CauldronBlock)
         {
@@ -282,49 +297,80 @@ public class CommonEventHandler {
     }
 
     @SubscribeEvent
-    public static void onLevelChange(PlayerXpEvent.LevelChange event)
+    public static void onEntityStruckByLightning(EntityStruckByLightningEvent event)
     {
-        if (DisableConfig.enchantingpatch.get()) return;
-        String cost = getCost(event.getPlayer().getUUID());
-        if (!cost.equals(""))
+        if (event.getEntity() instanceof HorseEntity)
         {
-            if (cost.equals("anvil"))
-                removeCost(event.getPlayer().getUUID());
+            HorseEntity entity = (HorseEntity) event.getEntity();
+            event.getEntity().remove();
+            ZombieHorseEntity zombieHorse = EntityType.ZOMBIE_HORSE.create(event.getEntity().level);
+            zombieHorse.moveTo(entity.getX(), entity.getY(), entity.getZ(), entity.yRot, entity.xRot);
+            zombieHorse.setNoAi(entity.isNoAi());
+            zombieHorse.setBaby(entity.isBaby());
+            if (entity.hasCustomName()) {
+                zombieHorse.setCustomName(entity.getCustomName());
+                zombieHorse.setCustomNameVisible(entity.isCustomNameVisible());
+            }
 
-            event.setCanceled(true);
-            event.getPlayer().giveExperiencePoints(UtilityC.getExperienceFromLevel(event.getLevels()));
+            zombieHorse.setPersistenceRequired();
+            net.minecraftforge.event.ForgeEventFactory.onLivingConvert(entity, zombieHorse);
+            entity.level.addFreshEntity(zombieHorse);
         }
     }
 
     @SubscribeEvent
-    public static void onEntityJoin(EntityJoinWorldEvent event) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        if (event.getEntity() instanceof FoxEntityModified) return;
-        if (event.getEntity() instanceof PolarBearEntityModified) return;
-
-        if (event.getWorld().isClientSide) return;
-
-        if (event.getEntity() instanceof FoxEntity)
+    public static void onLevelChange(PlayerXpEvent.LevelChange event)
+    {
+        if (event.getEntity().level.isClientSide) return;
+        if (DisableConfig.enchantingpatch.get()) return;
+        String cost = getCost(event.getPlayer().getUUID());
+        if (!cost.equals(""))
         {
-            if (DisableConfig.tame_fox.get()) return;
+            removeCost(event.getPlayer().getUUID());
+
+            CTweaks.logger.info(cost);
+
             event.setCanceled(true);
-            FoxEntityModified fox = new FoxEntityModified(EntityInit.FOX_MODIFIED.get(), event.getWorld());
-            fox.copyPosition(event.getEntity());
-            fox.setPos(event.getEntity().position().x, event.getEntity().position().y, event.getEntity().position().z);
-            fox.forcedLoading = true;
-            Method method = event.getWorld().getClass().getDeclaredMethod("add", Entity.class);
-            method.setAccessible(true);
-            method.invoke(event.getWorld(), fox);
+            CTweaks.logger.info(UtilityC.getExperienceFromLevel(Math.abs(event.getLevels())));
+            event.getPlayer().giveExperiencePoints(-UtilityC.getExperienceFromLevel(Math.abs(event.getLevels())));
+
+            ((ServerPlayerEntity) event.getPlayer()).connection.send(new SSetExperiencePacket(
+                    event.getPlayer().experienceProgress,
+                    event.getPlayer().totalExperience,
+                    event.getPlayer().experienceLevel
+            ));
+
+            setCost(event.getPlayer(), cost);
         }
-        else if (event.getEntity().getClass() == PolarBearEntity.class)
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void onBiomeLoadingEvent(BiomeLoadingEvent event) {
+        List<MobSpawnInfo.Spawners> spawns =
+                event.getSpawns().getSpawner(EntityClassification.CREATURE);
+
+        Iterator<MobSpawnInfo.Spawners> iterator = spawns.iterator();
+
+        MobSpawnInfo.Spawners spans = null;
+
+        while (iterator.hasNext())
         {
-            if (DisableConfig.mount_polar_bear.get()) return;
-            event.setCanceled(true);
-            PolarBearEntityModified bear = new PolarBearEntityModified(EntityInit.POLAR_BEAR_MODIFIED.get(), event.getWorld());
-            bear.copyPosition(event.getEntity());
-            bear.setBaby(((PolarBearEntity)event.getEntity()).isBaby());
-            Method method = event.getWorld().getClass().getDeclaredMethod("add", Entity.class);
-            method.setAccessible(true);
-            method.invoke(event.getWorld(), bear);
+            MobSpawnInfo.Spawners spawners = iterator.next();
+            if (spawners.type == EntityType.FOX)
+            {
+                iterator.remove();
+                spans = new MobSpawnInfo.Spawners(EntityInit.FOX_MODIFIED.get(), 8, 2, 4);
+            }
+            else if (spawners.type == EntityType.POLAR_BEAR)
+            {
+                iterator.remove();
+                spans = new MobSpawnInfo.Spawners(EntityInit.POLAR_BEAR_MODIFIED.get(), 1, 1, 2);
+            }
+        }
+
+        if (spans != null)
+        {
+            spawns.add(spans);
         }
     }
 
@@ -338,8 +384,6 @@ public class CommonEventHandler {
             PlayerEntity player = (PlayerEntity) event.getEntity();
 
             event.setDamageModifier(Math.min(event.getDamageModifier()+player.fallDistance/10, 2.2f));
-
-            System.out.println(((LivingEntity) event.getTarget()).getHealth());
         }
     }
 
