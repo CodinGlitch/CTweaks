@@ -1,23 +1,19 @@
 
 package com.codinglitch.ctweaks.util;
 
-import java.awt.Color;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.EnchantedBookItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.phys.Vec3;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.item.EnchantedBookItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.biome.Biome;
-import net.minecraftforge.registries.ForgeRegistries;
 
 public class UtilityC {
     public static List<Item> registeredCatalysts = new ArrayList<>();
@@ -195,8 +191,8 @@ public class UtilityC {
         return new BlockPos((double)from.getX() + (double)(to.getX() - from.getX()) * normal, (double)from.getY() + (double)(to.getY() - from.getY()) * normal, (double)from.getZ() + (double)(to.getZ() - from.getZ()) * normal);
     }
 
-    public static Vector3d interpolate(Vector3d from, Vector3d to, double normal) {
-        return new Vector3d(from.x + (to.x - from.x) * normal, from.y + (to.y - from.y) * normal, from.z + (to.z - from.z) * normal);
+    public static Vec3 interpolate(Vec3 from, Vec3 to, double normal) {
+        return new Vec3(from.x + (to.x - from.x) * normal, from.y + (to.y - from.y) * normal, from.z + (to.z - from.z) * normal);
     }
 
     public static Color interpolate(Color from, Color to, double normal) {

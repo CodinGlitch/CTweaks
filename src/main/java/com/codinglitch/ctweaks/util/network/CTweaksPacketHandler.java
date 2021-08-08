@@ -3,16 +3,16 @@ package com.codinglitch.ctweaks.util.network;
 import com.codinglitch.ctweaks.registry.capabilities.DeathFearProvider;
 import com.codinglitch.ctweaks.registry.capabilities.IDeathFear;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.network.NetworkEvent;
-import net.minecraftforge.fml.network.NetworkRegistry;
-import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.fmllegacy.network.NetworkRegistry;
+import net.minecraftforge.fmllegacy.network.simple.SimpleChannel;
 
 import java.util.function.Supplier;
 
@@ -39,7 +39,7 @@ public class CTweaksPacketHandler {
     {
         private String msg = "";
 
-        DisplayClientMessage(final PacketBuffer packetBuffer) {
+        DisplayClientMessage(final FriendlyByteBuf packetBuffer) {
             this.msg = packetBuffer.readUtf();
         }
 
@@ -47,7 +47,7 @@ public class CTweaksPacketHandler {
             this.msg = msg;
         }
 
-        void encode(final PacketBuffer packetBuffer) {
+        void encode(final FriendlyByteBuf packetBuffer) {
             packetBuffer.writeUtf(msg);
         }
 
@@ -56,9 +56,9 @@ public class CTweaksPacketHandler {
             NetworkEvent.Context context = ctx.get();
             if (context.getDirection().getReceptionSide() == LogicalSide.CLIENT) {
                 ctx.get().enqueueWork(() -> {
-                    ClientPlayerEntity player = Minecraft.getInstance().player;
+                    LocalPlayer player = Minecraft.getInstance().player;
 
-                    player.displayClientMessage(new StringTextComponent(I18n.get(msg.msg)), true);
+                    player.displayClientMessage(new TextComponent(I18n.get(msg.msg)), true);
                 });
                 ctx.get().setPacketHandled(true);
             }
@@ -71,7 +71,7 @@ public class CTweaksPacketHandler {
         private int counter = 0;
         private int maxCounter = 0;
 
-        SyncFear(final PacketBuffer packetBuffer) {
+        SyncFear(final FriendlyByteBuf packetBuffer) {
             this.fear = packetBuffer.readUtf();
             this.counter = packetBuffer.readInt();
             this.maxCounter = packetBuffer.readInt();
@@ -83,7 +83,7 @@ public class CTweaksPacketHandler {
             this.maxCounter = maxcounter;
         }
 
-        void encode(final PacketBuffer packetBuffer) {
+        void encode(final FriendlyByteBuf packetBuffer) {
             packetBuffer.writeUtf(fear);
             packetBuffer.writeInt(counter);
             packetBuffer.writeInt(maxCounter);
@@ -94,7 +94,7 @@ public class CTweaksPacketHandler {
             NetworkEvent.Context context = ctx.get();
             if (context.getDirection().getReceptionSide() == LogicalSide.CLIENT) {
                 ctx.get().enqueueWork(() -> {
-                    ClientPlayerEntity player = Minecraft.getInstance().player;
+                    LocalPlayer player = Minecraft.getInstance().player;
                     LazyOptional<IDeathFear> capability1 = player.getCapability(DeathFearProvider.capability);
 
                     if (capability1.isPresent())
