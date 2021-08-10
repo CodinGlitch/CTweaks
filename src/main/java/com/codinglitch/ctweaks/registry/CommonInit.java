@@ -1,5 +1,6 @@
 package com.codinglitch.ctweaks.registry;
 
+import com.codinglitch.ctweaks.registry.behaviour.StewInteraction;
 import com.codinglitch.ctweaks.registry.init.CapabilitiesInit;
 import com.codinglitch.ctweaks.util.SoundsC;
 import com.codinglitch.ctweaks.util.network.CTweaksPacketHandler;
@@ -21,6 +22,8 @@ public class CommonInit {
         CapabilitiesInit.initCapabilities();
         CTweaksPacketHandler.init();
 
+        StewInteraction.init();
+
         CauldronInteraction.WATER.put(Items.SPONGE, (state, level, blockPos, player, interactionHand, itemStack) -> {
             if (!level.isClientSide) {
                 player.awardStat(Stats.USE_CAULDRON);
@@ -41,5 +44,7 @@ public class CommonInit {
             }
             return InteractionResult.sidedSuccess(level.isClientSide);
         });
+
+
     }
 }

@@ -1,0 +1,8 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "ctweaks:item/stew_overlay",
+    "layer1": "ctweaks:item/stew",
+    "particle": "ctweaks:item/stew"
+  }
+}
