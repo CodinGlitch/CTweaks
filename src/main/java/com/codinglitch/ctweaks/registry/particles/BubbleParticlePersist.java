@@ -12,6 +12,8 @@ import java.awt.*;
 
 @OnlyIn(Dist.CLIENT)
 public class BubbleParticlePersist extends TextureSheetParticle {
+    private int maxlife;
+
     BubbleParticlePersist(ClientLevel level, double xo, double yo, double zo, double xd, double yd, double zd) {
         super(level, xo, yo, zo);
         this.setSize(0.02F, 0.02F);
@@ -20,6 +22,7 @@ public class BubbleParticlePersist extends TextureSheetParticle {
         this.yd = yd * (double)0.2F + (Math.random() * 2.0D - 1.0D) * (double)0.02F;
         this.zd = zd * (double)0.2F + (Math.random() * 2.0D - 1.0D) * (double)0.02F;
         this.lifetime = (int)(8.0D / (Math.random() * 0.8D + 0.2D));
+        this.maxlife = this.lifetime;
     }
 
     public void tick() {
@@ -34,6 +37,7 @@ public class BubbleParticlePersist extends TextureSheetParticle {
             this.xd *= 0.85F;
             this.yd *= 0.85F;
             this.zd *= 0.85F;
+            this.alpha = (float)this.lifetime/(float)this.maxlife;
         }
     }
 

@@ -19,4 +19,7 @@ public class ParticlesInit {
     public static final RegistryObject<SimpleParticleType> BUBBLE_PERSIST = PARTICLES.register("bubble_persist",
             () -> new SimpleParticleType(true)
     );
+    public static final RegistryObject<SimpleParticleType> ELECTRICITY = PARTICLES.register("electricity",
+            () -> new SimpleParticleType(true)
+    );
 }

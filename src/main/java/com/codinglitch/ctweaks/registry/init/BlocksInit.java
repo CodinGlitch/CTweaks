@@ -1,5 +1,6 @@
 package com.codinglitch.ctweaks.registry.init;
 
+import com.codinglitch.ctweaks.registry.blocks.ElectricFence;
 import com.codinglitch.ctweaks.registry.blocks.StewCauldron;
 import com.codinglitch.ctweaks.registry.blocks.ModifiedJukebox;
 import com.codinglitch.ctweaks.util.ReferenceC;
@@ -38,4 +39,5 @@ public class BlocksInit {
 
     public static final RegistryObject<Block> JUKEBOX_MODIFIED = register(OVERRIDE_VANILLA_BLOCKS, ItemsInit.OVERRIDE_VANILLA_ITEMS, "jukebox", ModifiedJukebox::new);
     public static final RegistryObject<Block> STEW_CAULDRON = registerWithoutItem(BLOCKS, "stew_cauldron", StewCauldron::new);
+    public static final RegistryObject<Block> ELECTRIC_FENCE = register(BLOCKS, ItemsInit.ITEMS, "electric_fence", ElectricFence::new);
 }

@@ -32,11 +32,6 @@ public class StewItem extends BowlFoodItem {
     }
 
     @Override
-    public ItemStack getDefaultInstance() {
-        return PotionUtils.setPotion(super.getDefaultInstance(), Potions.WATER);
-    }
-
-    @Override
     public ItemStack finishUsingItem(ItemStack itemStack, Level level, LivingEntity entity) {
         if (entity instanceof Player player)
         {
@@ -44,7 +39,16 @@ public class StewItem extends BowlFoodItem {
                 CriteriaTriggers.CONSUME_ITEM.trigger((ServerPlayer)player, itemStack);
             }
             player.getFoodData().eat(StewUtils.calculateFoodValue(itemStack),StewUtils.calculateSaturation(itemStack));
-            itemStack.shrink(1);
+            if (player == null || !player.getAbilities().instabuild) {
+                itemStack.shrink(1);
+                if (itemStack.isEmpty()) {
+                    return new ItemStack(Items.BOWL);
+                }
+
+                if (player != null) {
+                    player.getInventory().add(new ItemStack(Items.BOWL));
+                }
+            }
         }
         return itemStack;
     }

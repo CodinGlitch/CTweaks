@@ -1,0 +1,106 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "powered": "false"
+      },
+      "apply": {
+        "model": "ctweaks:block/electric_fence_post"
+      }
+    },
+    {
+      "when": {
+        "powered": "true"
+      },
+      "apply": {
+        "model": "ctweaks:block/electric_fence_post_on"
+      }
+    },
+    {
+      "when": {
+        "powered": "false",
+        "north": "true"
+      },
+      "apply": {
+        "model": "ctweaks:block/electric_fence_side",
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "powered": "true",
+        "north": "true"
+      },
+      "apply": {
+        "model": "ctweaks:block/electric_fence_side_on",
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "powered": "false",
+        "east": "true"
+      },
+      "apply": {
+        "model": "ctweaks:block/electric_fence_side",
+        "y": 90,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "powered": "true",
+        "east": "true"
+      },
+      "apply": {
+        "model": "ctweaks:block/electric_fence_side_on",
+        "y": 90,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "powered": "false",
+        "south": "true"
+      },
+      "apply": {
+        "model": "ctweaks:block/electric_fence_side",
+        "y": 180,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "powered": "true",
+        "south": "true"
+      },
+      "apply": {
+        "model": "ctweaks:block/electric_fence_side_on",
+        "y": 180,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "powered": "false",
+        "west": "true"
+      },
+      "apply": {
+        "model": "ctweaks:block/electric_fence_side",
+        "y": 270,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "powered": "true",
+        "west": "true"
+      },
+      "apply": {
+        "model": "ctweaks:block/electric_fence_side_on",
+        "y": 270,
+        "uvlock": true
+      }
+    }
+  ]
+}

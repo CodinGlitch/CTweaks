@@ -10,6 +10,7 @@ import com.codinglitch.ctweaks.registry.entities.IllusionerModified;
 import com.codinglitch.ctweaks.registry.entities.PolarBearEntityModified;
 import com.codinglitch.ctweaks.registry.init.*;
 import com.codinglitch.ctweaks.registry.particles.BubbleParticlePersist;
+import com.codinglitch.ctweaks.registry.particles.ElectricityParticle;
 import com.codinglitch.ctweaks.util.SoundsC;
 import com.codinglitch.ctweaks.util.StewUtils;
 import net.minecraft.client.Minecraft;
@@ -125,6 +126,7 @@ public class CTweaks {
         @SubscribeEvent
         public static void registerParticle(ParticleFactoryRegisterEvent event) {
             Minecraft.getInstance().particleEngine.register(ParticlesInit.BUBBLE_PERSIST.get(), BubbleParticlePersist.Provider::new);
+            Minecraft.getInstance().particleEngine.register(ParticlesInit.ELECTRICITY.get(), ElectricityParticle.Provider::new);
         }
         @SubscribeEvent
         public static void registerBlockColors(ColorHandlerEvent.Block event){

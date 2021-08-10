@@ -9,6 +9,7 @@ import com.codinglitch.ctweaks.util.StewIngredient;
 import com.codinglitch.ctweaks.util.StewUtils;
 import net.minecraft.core.cauldron.CauldronInteraction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionResult;
@@ -42,7 +43,7 @@ public interface StewInteraction {
                         if (cauldron.stewFinished) {
                             player.awardStat(Stats.FILL_CAULDRON);
                             LayeredCauldronBlock.lowerFillLevel(state, level, blockPos);
-                            level.playSound(null, blockPos, SoundsC.sponge.get(), SoundSource.BLOCKS, 1, 0.8f+level.random.nextFloat()/4);
+                            level.playSound(null, blockPos, SoundEvents.BUCKET_FILL, SoundSource.BLOCKS, 1, 0.8f+level.random.nextFloat()/4);
 
                             int[] items = new int[3];
 

@@ -52,14 +52,14 @@ public class StewCauldronBlockEntity extends BlockEntity {
             int liquid_level = state.getValue(LayeredCauldronBlock.LEVEL);
             BlockPos pos = blockEntity.worldPosition;
             serverlevel.sendParticles(ParticlesInit.BUBBLE_PERSIST.get(),
-                    (double)pos.getX() + 0.1f+level.random.nextFloat()*0.8f,
-                    (double)pos.getY() + 0.4f+liquid_level*0.2f,
-                    (double)pos.getZ() + 0.1f+level.random.nextFloat()*0.8f,
+                    (double)pos.getX() + 0.15f+level.random.nextFloat()*0.7f,
+                    (double)pos.getY() + 0.3f+liquid_level*0.2f,
+                    (double)pos.getZ() + 0.15f+level.random.nextFloat()*0.7f,
                     1,
                     0.0D,
-                    0.01D,
                     0.0D,
-                    0.01D
+                    0.0D,
+                    0.0D
             );
             if (level.random.nextInt(80) == 0) {
                 level.playSound(null, blockPos, SoundEvents.BUBBLE_COLUMN_WHIRLPOOL_AMBIENT, SoundSource.BLOCKS, 0.2F + level.random.nextFloat() * 0.2F, 0.9F + level.random.nextFloat() * 0.15F);

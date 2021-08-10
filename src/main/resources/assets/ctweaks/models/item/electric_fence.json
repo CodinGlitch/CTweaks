@@ -1,0 +1,6 @@
+{
+  "parent": "ctweaks:block/electric_fence_inventory",
+  "textures": {
+    "texture": "ctweaks:block/smooth_copper"
+  }
+}
