@@ -667,8 +667,7 @@ public class CommonEventHandler {
     {
         if (DisableConfig.trauma.get()) return;
 
-        if (!(event.getEntityLiving() instanceof Player)) return;
-        Player player = (Player) event.getEntityLiving();
+        if (!(event.getEntityLiving() instanceof Player player)) return;
 
         LazyOptional<IDeathFear> capability = player.getCapability(DeathFearProvider.capability);
 

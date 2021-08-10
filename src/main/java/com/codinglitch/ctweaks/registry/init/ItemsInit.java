@@ -1,6 +1,7 @@
 package com.codinglitch.ctweaks.registry.init;
 
 import com.codinglitch.ctweaks.registry.items.ScytheItem;
+import com.codinglitch.ctweaks.registry.items.StewItem;
 import com.codinglitch.ctweaks.util.ReferenceC;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -78,4 +79,6 @@ public class ItemsInit {
                     new Item.Properties().tab(CreativeModeTab.TAB_TOOLS)
             )
     );
+
+    public static final RegistryObject<Item> STEW = register(ITEMS, "stew", StewItem::new);
 }

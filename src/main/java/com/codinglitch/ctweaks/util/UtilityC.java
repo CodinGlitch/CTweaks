@@ -8,6 +8,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import java.awt.*;
@@ -19,6 +23,27 @@ public class UtilityC {
     public static List<Item> registeredCatalysts = new ArrayList<>();
 
     public UtilityC() {
+    }
+
+    public static boolean isValidHeatSource(BlockPos pos, Level level)
+    {
+        return isValidHeatSource(level.getBlockState(pos));
+    }
+
+    public static boolean isValidHeatSource(BlockState state)
+    {
+        return isValidHeatSource(state.getBlock());
+    }
+
+    public static boolean isValidHeatSource(Block block)
+    {
+        if (block.equals(Blocks.LAVA)) return true;
+        if (block.equals(Blocks.LAVA_CAULDRON)) return true;
+        if (block.equals(Blocks.FIRE)) return true;
+        if (block.equals(Blocks.MAGMA_BLOCK)) return true;
+        if (block.equals(Blocks.CAMPFIRE)) return true;
+        if (block.equals(Blocks.SOUL_CAMPFIRE)) return true;
+        return false;
     }
 
     public static int getLevelCostFromItems(ItemStack left, ItemStack right)

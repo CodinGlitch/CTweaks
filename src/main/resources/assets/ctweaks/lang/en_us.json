@@ -10,5 +10,9 @@
   "item.ctweaks.golden_scythe": "Golden Scythe",
   "item.ctweaks.diamond_scythe": "Diamond Scythe",
   "item.ctweaks.netherite_scythe": "Netherite Scythe",
-  "ctweaks.message.calm": "You start to calm down"
+  "item.ctweaks.stew": "Stew",
+  "ctweaks.message.calm": "You start to calm down",
+
+  "ctweaks.stew.ingredients": "§9Ingredients:",
+  "ctweaks.formatting.blue": "§9"
 }

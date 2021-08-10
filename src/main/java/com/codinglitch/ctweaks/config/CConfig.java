@@ -19,6 +19,7 @@ public class CConfig {
     static
     {
         DisableConfig.init(builder);
+        BehaviourConfig.init(builder);
         config = builder.build();
         ClientConfig.init(client_builder);
         client_config = client_builder.build();

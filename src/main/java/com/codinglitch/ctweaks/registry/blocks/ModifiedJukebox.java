@@ -1,16 +1,12 @@
 package com.codinglitch.ctweaks.registry.blocks;
 
-import com.codinglitch.ctweaks.registry.tileentities.ModifiedJukeboxBlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.JukeboxBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.MaterialColor;
-
-import javax.annotation.Nullable;
 
 public class ModifiedJukebox extends JukeboxBlock {
     public ModifiedJukebox() {

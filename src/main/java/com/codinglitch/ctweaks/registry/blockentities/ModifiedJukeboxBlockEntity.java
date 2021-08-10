@@ -1,4 +1,4 @@
-package com.codinglitch.ctweaks.registry.tileentities;
+package com.codinglitch.ctweaks.registry.blockentities;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;

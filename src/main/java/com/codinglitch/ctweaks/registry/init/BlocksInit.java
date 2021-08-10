@@ -1,5 +1,6 @@
 package com.codinglitch.ctweaks.registry.init;
 
+import com.codinglitch.ctweaks.registry.blocks.StewCauldron;
 import com.codinglitch.ctweaks.registry.blocks.ModifiedJukebox;
 import com.codinglitch.ctweaks.util.ReferenceC;
 import net.minecraft.world.level.block.Block;
@@ -35,5 +36,6 @@ public class BlocksInit {
         OVERRIDE_VANILLA_BLOCKS.register(FMLJavaModLoadingContext.get().getModEventBus());
     }
 
-    public static final RegistryObject<Block> JUKEBOX_MODIFIED = register(OVERRIDE_VANILLA_BLOCKS, ItemsInit.OVERRIDE_VANILLA_ITEMS, "jukebox", () -> new ModifiedJukebox());
+    public static final RegistryObject<Block> JUKEBOX_MODIFIED = register(OVERRIDE_VANILLA_BLOCKS, ItemsInit.OVERRIDE_VANILLA_ITEMS, "jukebox", ModifiedJukebox::new);
+    public static final RegistryObject<Block> STEW_CAULDRON = registerWithoutItem(BLOCKS, "stew_cauldron", StewCauldron::new);
 }
