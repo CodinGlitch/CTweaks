@@ -44,6 +44,10 @@ public class ElectricFence extends FenceBlock {
         if (state.getValue(ELECTRIC_RUNNING))
         {
             entity.hurt(DamageSources.ELECTRICITY, 1);
+            double xDist = entity.getX() - pos.getX();
+            double zDist = entity.getZ() - pos.getZ();
+            double expo = Math.max(xDist * xDist + zDist * zDist, 0.001D);
+            entity.push(xDist / expo * 4.0D, 0.2D, zDist / expo * 4.0D);
         }
     }
 
