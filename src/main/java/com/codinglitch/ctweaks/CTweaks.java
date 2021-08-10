@@ -1,36 +1,58 @@
 package com.codinglitch.ctweaks;
 
-import com.codinglitch.ctweaks.client.renderer.GreaterSnowManRenderer;
-import com.codinglitch.ctweaks.client.renderer.IllusionerGeyserRenderer;
+import com.codinglitch.ctweaks.client.renderer.FoxRendererModified;
 import com.codinglitch.ctweaks.config.CConfig;
 import com.codinglitch.ctweaks.registry.CommonInit;
-import com.codinglitch.ctweaks.registry.entities.GreaterSnowGolem;
+import com.codinglitch.ctweaks.registry.entities.FoxEntityModified;
 import com.codinglitch.ctweaks.registry.entities.IllusionerModified;
 import com.codinglitch.ctweaks.registry.entities.PolarBearEntityModified;
 import com.codinglitch.ctweaks.registry.init.BlocksInit;
 import com.codinglitch.ctweaks.registry.init.EntityInit;
 import com.codinglitch.ctweaks.registry.init.ItemsInit;
 import com.codinglitch.ctweaks.registry.init.TileEntityInit;
+import com.codinglitch.ctweaks.util.ReferenceC;
 import com.codinglitch.ctweaks.util.SoundsC;
-import net.minecraft.client.renderer.entity.EntityRenderers;
+import com.codinglitch.ctweaks.util.UtilityC;
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.ComposterBlock;
 import net.minecraft.client.renderer.entity.IllusionerRenderer;
 import net.minecraft.client.renderer.entity.PolarBearRenderer;
-import net.minecraft.world.entity.raid.Raid;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.block.ComposterBlock;
+import net.minecraft.entity.EntitySpawnPlacementRegistry;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ai.attributes.GlobalEntityTypeAttributes;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.monster.ZombieEntity;
+import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.passive.FoxEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.biome.Biomes;
+import net.minecraft.world.gen.Heightmap;
+import net.minecraft.world.raid.Raid;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.Tags;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DeferredWorkQueue;
 import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.Iterator;
 
 @Mod(
         value = "ctweaks"
@@ -89,14 +111,20 @@ public class CTweaks {
         ComposterBlock.COMPOSTABLES.put(Items.EGG.asItem(), 2);
         ComposterBlock.COMPOSTABLES.put(Items.PUFFERFISH.asItem(), 2);
 
-        Raid.RaiderType.create("illusioner", EntityInit.ILLUSIONER_MODIFIED.get(), new int[]{0, 0, 0, 0, 1, 0, 2, 3});
+        EntitySpawnPlacementRegistry.register(EntityInit.FOX_MODIFIED.get(),
+                EntitySpawnPlacementRegistry.PlacementType.NO_RESTRICTIONS,
+                Heightmap.Type.MOTION_BLOCKING_NO_LEAVES, AnimalEntity::checkAnimalSpawnRules);
+
+        Raid.WaveMember.create("illusioner", EntityInit.ILLUSIONER_MODIFIED.get(), new int[]{0, 0, 0, 0, 1, 0, 2, 3});
+
+        logger.info(UtilityC.getExperienceFromLevel(4));
+        logger.info(UtilityC.getExperienceFromLevel(9));
     }
 
     private void doClientStuff(FMLClientSetupEvent event) {
-        EntityRenderers.register(EntityInit.POLAR_BEAR_MODIFIED.get(), PolarBearRenderer::new);
-        EntityRenderers.register(EntityInit.ILLUSIONER_MODIFIED.get(), IllusionerRenderer::new);
-        EntityRenderers.register(EntityInit.GREATER_SNOW_GOLEM.get(), GreaterSnowManRenderer::new);
-        EntityRenderers.register(EntityInit.ILLUSIONER_GEYSER.get(), IllusionerGeyserRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityInit.FOX_MODIFIED.get(), FoxRendererModified::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityInit.POLAR_BEAR_MODIFIED.get(), PolarBearRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityInit.ILLUSIONER_MODIFIED.get(), IllusionerRenderer::new);
     }
 
     private void enqueueIMC(InterModEnqueueEvent event)
@@ -107,13 +135,22 @@ public class CTweaks {
     {
     }
 
+    @SubscribeEvent
+    public void onServerStarting(FMLServerStartingEvent event) {
+    }
+
     @Mod.EventBusSubscriber(bus=Mod.EventBusSubscriber.Bus.MOD)
     public static class RegistryEvents {
         @SubscribeEvent
+        public static void onBlocksRegistry(RegistryEvent.Register<Block> event) {
+
+        }
+
+        @SubscribeEvent
         public static void onAttributeCreation(EntityAttributeCreationEvent event) {
+            event.put(EntityInit.FOX_MODIFIED.get(), FoxEntityModified.createAttributes().build());
             event.put(EntityInit.POLAR_BEAR_MODIFIED.get(), PolarBearEntityModified.createAttributes().build());
             event.put(EntityInit.ILLUSIONER_MODIFIED.get(), IllusionerModified.createAttributes().build());
-            event.put(EntityInit.GREATER_SNOW_GOLEM.get(), GreaterSnowGolem.createAttributes().build());
         }
     }
 }

@@ -1,70 +1,78 @@
 package com.codinglitch.ctweaks.registry.entities;
 
+import com.codinglitch.ctweaks.CTweaks;
 import com.codinglitch.ctweaks.util.SoundsC;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.Mth;
+import com.codinglitch.ctweaks.util.UtilityC;
+import net.minecraft.advancements.criterion.UsedTotemTrigger;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.*;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.entity.ai.goal.*;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.monster.*;
+import net.minecraft.entity.passive.PolarBearEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.EvokerFangsEntity;
+import net.minecraft.entity.projectile.ProjectileHelper;
+import net.minecraft.inventory.EquipmentSlotType;
+import net.minecraft.item.BowItem;
+import net.minecraft.item.ChorusFruitItem;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.util.*;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.shapes.VoxelShape;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.*;
-import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.GoalSelector;
-import net.minecraft.world.entity.ai.goal.RangedBowAttackGoal;
-import net.minecraft.world.entity.ai.goal.WrappedGoal;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.Illusioner;
-import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.monster.SpellcasterIllager;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.minecraft.world.IServerWorld;
+import net.minecraft.world.World;
+import net.minecraft.world.raid.Raid;
+import net.minecraft.world.raid.RaidManager;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
 
 import javax.annotation.Nullable;
 import java.util.EnumSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Set;
 
-public class IllusionerModified extends Illusioner {
+public class IllusionerModified extends IllusionerEntity {
     public boolean enraged = false;
 
     public int ticksToTeleport = 0;
     public int comboCount = 0;
 
-    private Hashtable<String, String> values = new Hashtable<>();
-
-    public IllusionerModified(EntityType<? extends Illusioner> entityType, Level world) {
+    public IllusionerModified(EntityType<? extends IllusionerEntity> entityType, World world) {
         super(entityType, world);
-
-        values.put("clientSideIllusionOffsets", "f_32909_");
-        values.put("clientSideIllusionTicks", "f_32908_");
-
         this.xpReward = 10;
-        setValue("clientSideIllusionOffsets", new Vec3[2][4]);
+        setValue("clientSideIllusionOffsets", new Vector3d[2][4]);
 
         for(int i = 0; i < 4; ++i) {
-            ((Vec3[][])getValue("clientSideIllusionOffsets"))[0][i] = Vec3.ZERO;
-            ((Vec3[][])getValue("clientSideIllusionOffsets"))[1][i] = Vec3.ZERO;
+            ((Vector3d[][])getValue("clientSideIllusionOffsets"))[0][i] = Vector3d.ZERO;
+            ((Vector3d[][])getValue("clientSideIllusionOffsets"))[1][i] = Vector3d.ZERO;
         }
+
+        this.setItemSlot(EquipmentSlotType.MAINHAND, new ItemStack(Items.TOTEM_OF_UNDYING));
     }
 
     private void setValue(String name, Object value)
     {
-        ObfuscationReflectionHelper.setPrivateValue(Illusioner.class, this, value, values.get(name));
+        ObfuscationReflectionHelper.setPrivateValue(IllusionerEntity.class, this, value, name);
     }
 
     private <T> T getValue(String name)
     {
-        return ObfuscationReflectionHelper.getPrivateValue(Illusioner.class, this, values.get(name));
+        return ObfuscationReflectionHelper.getPrivateValue(IllusionerEntity.class, this, name);
     }
 
     @Override
@@ -79,17 +87,17 @@ public class IllusionerModified extends Illusioner {
 
             this.invulnerableTime = 200;
 
-            setValue("clientSideIllusionOffsets", new Vec3[2][8]);
+            setValue("clientSideIllusionOffsets", new Vector3d[2][8]);
 
             for(int i = 0; i < 8; ++i) {
-                ((Vec3[][])getValue("clientSideIllusionOffsets"))[0][i] = Vec3.ZERO;
-                ((Vec3[][])getValue("clientSideIllusionOffsets"))[1][i] = Vec3.ZERO;
+                ((Vector3d[][])getValue("clientSideIllusionOffsets"))[0][i] = Vector3d.ZERO;
+                ((Vector3d[][])getValue("clientSideIllusionOffsets"))[1][i] = Vector3d.ZERO;
             }
         }
         if (enraged)
         {
             double x = getX()+randomOffset(2,5);
-            double y = getY() + 2;
+            double y = getY() + 50;
             double z = getZ()+randomOffset(2,5);
             this.randomTeleport(x,y,z, true);
             this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ILLUSIONER_MIRROR_MOVE, this.getSoundSource(), 1.0F, 1.4F);
@@ -107,15 +115,15 @@ public class IllusionerModified extends Illusioner {
     protected void registerGoals() {
         super.registerGoals();
 
-        Set<WrappedGoal> goals = ObfuscationReflectionHelper.getPrivateValue(GoalSelector.class, this.goalSelector, "f_25345_");
+        Set<PrioritizedGoal> goals = ObfuscationReflectionHelper.getPrivateValue(GoalSelector.class, this.goalSelector, "availableGoals");
 
-        Iterator<WrappedGoal> iterator = goals.iterator();
+        Iterator<PrioritizedGoal> iterator = goals.iterator();
 
         Goal toRemove = null;
 
         while (iterator.hasNext())
         {
-            WrappedGoal goal = iterator.next();
+            PrioritizedGoal goal = iterator.next();
             if (goal.getGoal() instanceof RangedBowAttackGoal)
             {
                 toRemove = goal.getGoal();
@@ -137,9 +145,8 @@ public class IllusionerModified extends Illusioner {
     }
 
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficultyInstance, MobSpawnType reason, @Nullable SpawnGroupData livingEntityData, @Nullable CompoundTag nbt) {
-        SpawnGroupData data = super.finalizeSpawn(world, difficultyInstance, reason, livingEntityData, nbt);
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.TOTEM_OF_UNDYING));
+    public ILivingEntityData finalizeSpawn(IServerWorld world, DifficultyInstance difficultyInstance, SpawnReason reason, @Nullable ILivingEntityData livingEntityData, @Nullable CompoundNBT nbt) {
+        ILivingEntityData data = super.finalizeSpawn(world, difficultyInstance, reason, livingEntityData, nbt);
         return data;
     }
 
@@ -159,8 +166,8 @@ public class IllusionerModified extends Illusioner {
                     setValue("clientSideIllusionTicks", 3);
 
                     for(int k = 0; k < amount; ++k) {
-                        ((Vec3[][])getValue("clientSideIllusionOffsets"))[0][k] = ((Vec3[][])getValue("clientSideIllusionOffsets"))[1][k];
-                        ((Vec3[][])getValue("clientSideIllusionOffsets"))[1][k] = new Vec3(0.0D, 0.0D, 0.0D);
+                        ((Vector3d[][])getValue("clientSideIllusionOffsets"))[0][k] = ((Vector3d[][])getValue("clientSideIllusionOffsets"))[1][k];
+                        ((Vector3d[][])getValue("clientSideIllusionOffsets"))[1][k] = new Vector3d(0.0D, 0.0D, 0.0D);
                     }
                 }
             } else {
@@ -169,8 +176,8 @@ public class IllusionerModified extends Illusioner {
                 int i = 13;
 
                 for(int j = 0; j < amount; ++j) {
-                    ((Vec3[][])getValue("clientSideIllusionOffsets"))[0][j] = ((Vec3[][])getValue("clientSideIllusionOffsets"))[1][j];
-                    ((Vec3[][])getValue("clientSideIllusionOffsets"))[1][j] = new Vec3((double)(-6.0F + (float)this.random.nextInt(13)) * 0.5D, (double)Math.max(0, this.random.nextInt(6) - 4), (double)(-6.0F + (float)this.random.nextInt(13)) * 0.5D);
+                    ((Vector3d[][])getValue("clientSideIllusionOffsets"))[0][j] = ((Vector3d[][])getValue("clientSideIllusionOffsets"))[1][j];
+                    ((Vector3d[][])getValue("clientSideIllusionOffsets"))[1][j] = new Vector3d((double)(-6.0F + (float)this.random.nextInt(13)) * 0.5D, (double)Math.max(0, this.random.nextInt(6) - 4), (double)(-6.0F + (float)this.random.nextInt(13)) * 0.5D);
                 }
 
                 for(int l = 0; l < 16; ++l) {
@@ -193,20 +200,20 @@ public class IllusionerModified extends Illusioner {
                 if (enraged)
                 {
                     for(int i = 0; i < 8; ++i) {
-                        ((Vec3[][])getValue("clientSideIllusionOffsets"))[0][i] = Vec3.ZERO;
-                        ((Vec3[][])getValue("clientSideIllusionOffsets"))[1][i] = Vec3.ZERO;
+                        ((Vector3d[][])getValue("clientSideIllusionOffsets"))[0][i] = Vector3d.ZERO;
+                        ((Vector3d[][])getValue("clientSideIllusionOffsets"))[1][i] = Vector3d.ZERO;
                     }
                 }
                 else
                 {
                     for(int i = 0; i < 4; ++i) {
-                        ((Vec3[][])getValue("clientSideIllusionOffsets"))[0][i] = Vec3.ZERO;
-                        ((Vec3[][])getValue("clientSideIllusionOffsets"))[1][i] = Vec3.ZERO;
+                        ((Vector3d[][])getValue("clientSideIllusionOffsets"))[0][i] = Vector3d.ZERO;
+                        ((Vector3d[][])getValue("clientSideIllusionOffsets"))[1][i] = Vector3d.ZERO;
                     }
                 }
 
                 double x = getTarget().getX()+randomOffset(5,6);
-                double y = getTarget().getY() + 2;
+                double y = getTarget().getY() + 50;
                 double z = getTarget().getZ()+randomOffset(5,6);
                 this.randomTeleport(x,y,z, false);
                 this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ILLUSIONER_MIRROR_MOVE, this.getSoundSource(), 1.0F, 1.4F);
@@ -229,7 +236,7 @@ public class IllusionerModified extends Illusioner {
         }
     }
 
-    class AttackSpellGoal extends SpellcasterIllager.SpellcasterUseSpellGoal {
+    class AttackSpellGoal extends SpellcastingIllagerEntity.UseSpellGoal {
         private AttackSpellGoal() {
         }
 
@@ -245,21 +252,21 @@ public class IllusionerModified extends Illusioner {
             LivingEntity livingentity = getTarget();
             double leastY = Math.min(livingentity.getY(), getY());
             double mostY = Math.max(livingentity.getY(), getY()) + 1.0D;
-            float f = (float)Mth.atan2(livingentity.getZ() - getZ(), livingentity.getX() - getX());
+            float f = (float)MathHelper.atan2(livingentity.getZ() - getZ(), livingentity.getX() - getX());
             if (distanceToSqr(livingentity) < 15.0D) {
                 for(int i = 0; i < 5; ++i) {
                     float f1 = f + (float)i * (float)Math.PI * 0.4F;
-                    this.createSpellEntity(getX() + (double)Mth.cos(f1) * 1.5D, getZ() + (double)Mth.sin(f1) * 1.5D, leastY, mostY, f1, 0);
+                    this.createSpellEntity(getX() + (double)MathHelper.cos(f1) * 1.5D, getZ() + (double)MathHelper.sin(f1) * 1.5D, leastY, mostY, f1, 0);
                 }
 
                 for(int k = 0; k < 16; ++k) {
                     float f2 = f + (float)k * (float)Math.PI * 2.0F / 8.0F + 1.2566371F;
-                    this.createSpellEntity(getX() + (double)Mth.cos(f2) * (2.5D+((float)k/5)), getZ() + (double)Mth.sin(f2) * (2.5D+((float)k/5)), leastY, mostY, f2, 3+k/2);
+                    this.createSpellEntity(getX() + (double)MathHelper.cos(f2) * (2.5D+((float)k/5)), getZ() + (double)MathHelper.sin(f2) * (2.5D+((float)k/5)), leastY, mostY, f2, 3+k/2);
                 }
             } else {
                 for(int l = 0; l < 16; ++l) {
                     double d2 = 1.25D * (double)(l + 1);
-                    this.createSpellEntity(getX() + (double)Mth.cos(f) * d2, getZ() + (double)Mth.sin(f) * d2, leastY, mostY, f, l*2);
+                    this.createSpellEntity(getX() + (double)MathHelper.cos(f) * d2, getZ() + (double)MathHelper.sin(f) * d2, leastY, mostY, f, l*2);
                 }
             }
 
@@ -287,7 +294,7 @@ public class IllusionerModified extends Illusioner {
                 }
 
                 blockpos = blockpos.below();
-            } while(blockpos.getY() >= Mth.floor(leastY) - 1);
+            } while(blockpos.getY() >= MathHelper.floor(leastY) - 1);
 
             if (flag) {
                 level.addFreshEntity(new IllusionerGeyser(level, x, (double)blockpos.getY() + d0, z, warmupDelayTicks, IllusionerModified.this));
@@ -299,12 +306,12 @@ public class IllusionerModified extends Illusioner {
             return SoundsC.illusioner_attack.get();
         }
 
-        protected SpellcasterIllager.IllagerSpell getSpell() {
-            return SpellcasterIllager.IllagerSpell.FANGS;
+        protected SpellcastingIllagerEntity.SpellType getSpell() {
+            return SpellcastingIllagerEntity.SpellType.FANGS;
         }
     }
 
-    public class StrafeGoal<T extends Monster> extends Goal
+    public class StrafeGoal<T extends MonsterEntity> extends Goal
     {
         private final T mob;
         private final double speedModifier;
@@ -351,7 +358,7 @@ public class IllusionerModified extends Illusioner {
             LivingEntity livingentity = this.mob.getTarget();
             if (livingentity != null) {
                 double d0 = this.mob.distanceToSqr(livingentity.getX(), livingentity.getY(), livingentity.getZ());
-                boolean flag = this.mob.getSensing().hasLineOfSight(livingentity);
+                boolean flag = this.mob.getSensing().canSee(livingentity);
                 boolean flag1 = this.seeTime > 0;
                 if (flag != flag1) {
                     this.seeTime = 0;

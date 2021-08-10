@@ -2,12 +2,12 @@ package com.codinglitch.ctweaks.registry.init;
 
 import com.codinglitch.ctweaks.registry.blocks.ModifiedJukebox;
 import com.codinglitch.ctweaks.util.ReferenceC;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.block.Block;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fmllegacy.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -25,7 +25,7 @@ public class BlocksInit {
     public static <T extends Block> RegistryObject<T> register(DeferredRegister<Block> reg, DeferredRegister<Item> reg1, String name, Supplier<T> block)
     {
         RegistryObject<T> registryObject = registerWithoutItem(reg, name, block);
-        ItemsInit.register(reg1, name, () -> new BlockItem(registryObject.get(), new Item.Properties().tab(CreativeModeTab.TAB_MISC)));
+        ItemsInit.register(reg1, name, () -> new BlockItem(registryObject.get(), new Item.Properties().tab(ItemGroup.TAB_MISC)));
         return registryObject;
     }
 

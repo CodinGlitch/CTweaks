@@ -1,4 +1,4 @@
-package com.codinglitch.ctweaks.registry.capabilities;
+package com.codinglitch.venerations.registry.capabilities;
 
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;
@@ -6,6 +6,8 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

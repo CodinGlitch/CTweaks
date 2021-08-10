@@ -2,19 +2,23 @@ package com.codinglitch.ctweaks.registry.entities;
 
 import com.codinglitch.ctweaks.registry.init.EntityInit;
 import com.codinglitch.ctweaks.util.SoundsC;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.EvokerFangs;
-import net.minecraft.world.level.Level;
+import net.minecraft.client.particle.SmokeParticle;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.projectile.EvokerFangsEntity;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.play.server.SSpawnObjectPacket;
+import net.minecraft.particles.ParticleTypes;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
+import net.minecraft.util.DamageSource;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.util.UUID;
@@ -26,11 +30,11 @@ public class IllusionerGeyser extends Entity {
     private IllusionerModified owner;
     private UUID ownerUUID;
 
-    public IllusionerGeyser(EntityType<?> entityType, Level world) {
+    public IllusionerGeyser(EntityType<?> entityType, World world) {
         super(entityType, world);
     }
 
-    public IllusionerGeyser(Level world, double x, double y, double z, int delay, IllusionerModified owner) {
+    public IllusionerGeyser(World world, double x, double y, double z, int delay, IllusionerModified owner) {
         this(EntityInit.ILLUSIONER_GEYSER.get(), world);
         this.warmupDelayTicks = delay;
         this.total = delay;
@@ -45,8 +49,8 @@ public class IllusionerGeyser extends Entity {
 
     @Nullable
     public LivingEntity getOwner() {
-        if (this.owner == null && this.ownerUUID != null && this.level instanceof ServerLevel) {
-            Entity entity = ((ServerLevel)this.level).getEntity(this.ownerUUID);
+        if (this.owner == null && this.ownerUUID != null && this.level instanceof ServerWorld) {
+            Entity entity = ((ServerWorld)this.level).getEntity(this.ownerUUID);
             if (entity instanceof IllusionerModified) {
                 this.owner = (IllusionerModified) entity;
             }
@@ -61,7 +65,7 @@ public class IllusionerGeyser extends Entity {
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag nbt) {
+    protected void readAdditionalSaveData(CompoundNBT nbt) {
         this.warmupDelayTicks = nbt.getInt("Warmup");
         if (nbt.hasUUID("Owner")) {
             this.ownerUUID = nbt.getUUID("Owner");
@@ -69,7 +73,7 @@ public class IllusionerGeyser extends Entity {
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag nbt) {
+    protected void addAdditionalSaveData(CompoundNBT nbt) {
         nbt.putInt("Warmup", this.warmupDelayTicks);
         if (this.ownerUUID != null) {
             nbt.putUUID("Owner", this.ownerUUID);
@@ -77,13 +81,12 @@ public class IllusionerGeyser extends Entity {
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
-        return new ClientboundAddEntityPacket(this);
+    public IPacket<?> getAddEntityPacket() {
+        return new SSpawnObjectPacket(this);
     }
 
     public void tick() {
         super.tick();
-        if (level.isClientSide) return;
         if (warmupDelayTicks > 0)
         {
             warmupDelayTicks--;
@@ -94,13 +97,13 @@ public class IllusionerGeyser extends Entity {
             {
                 this.level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundsC.illusioner_geyser.get(), this.getSoundSource(), 0.5f, (this.random.nextFloat() * 0.2F + 0.85F)+((float)total/20));
             }
-            ((ServerLevel)this.level).sendParticles(ParticleTypes.CLOUD, getX(), getY(), getZ(), 1, 0.2f, 0.5f, 0.2f, 0.05f);
+            ((ServerWorld)this.level).sendParticles(ParticleTypes.CLOUD, getX(), getY(), getZ(), 1, 0.2f, 0.5f, 0.2f, 0.05f);
 
             for(LivingEntity livingentity : this.level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(0.2D, 0.0D, 0.2D))) {
                 this.dealDamageTo(livingentity);
             }
 
-            if (lifeTicks==0) this.remove(RemovalReason.DISCARDED);
+            if (lifeTicks==0) this.remove();
 
             lifeTicks--;
         }
@@ -120,9 +123,9 @@ public class IllusionerGeyser extends Entity {
             }
             if (owner.enraged)
             {
-                entity.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 20, 2));
-                entity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 0));
-                entity.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 60, 0));
+                entity.addEffect(new EffectInstance(Effects.WEAKNESS, 20, 2));
+                entity.addEffect(new EffectInstance(Effects.MOVEMENT_SLOWDOWN, 20, 0));
+                entity.addEffect(new EffectInstance(Effects.CONFUSION, 60, 0));
             }
         }
     }

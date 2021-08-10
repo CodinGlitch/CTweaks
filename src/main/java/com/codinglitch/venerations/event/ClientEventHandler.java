@@ -1,24 +1,30 @@
-package com.codinglitch.ctweaks.event;
+package com.codinglitch.venerations.event;
 
-import com.codinglitch.ctweaks.CTweaks;
-import com.codinglitch.ctweaks.config.ClientConfig;
-import com.codinglitch.ctweaks.config.DisableConfig;
-import com.codinglitch.ctweaks.registry.capabilities.DeathFearProvider;
-import com.codinglitch.ctweaks.registry.capabilities.IDeathFear;
-import com.codinglitch.ctweaks.util.ReferenceC;
-import com.codinglitch.ctweaks.util.UtilityC;
+import com.codinglitch.venerations.CTweaks;
+import com.codinglitch.venerations.registry.capabilities.DeathFearProvider;
+import com.codinglitch.venerations.registry.capabilities.IDeathFear;
+import com.codinglitch.venerations.util.ReferenceC;
+import com.codinglitch.venerations.util.UtilityC;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.block.PumpkinBlock;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.RenderComponentsUtil;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.RenderTypeLookup;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
-import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -38,8 +44,8 @@ public class ClientEventHandler {
     @SubscribeEvent
     public static void onRenderScreen(RenderGameOverlayEvent.Post event)
     {
-        if (ClientConfig.trauma_effect.get()) return;
-        if (event.getType() != RenderGameOverlayEvent.ElementType.AIR) return;
+
+        if (event.getType() != RenderGameOverlayEvent.ElementType.VIGNETTE) return;
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder renderer = tessellator.getBuilder();
 
@@ -56,9 +62,13 @@ public class ClientEventHandler {
         ClientPlayerEntity player = Minecraft.getInstance().player;
         LazyOptional<IDeathFear> capability1 = player.getCapability(DeathFearProvider.capability);
 
+        CTweaks.logger.info("check 1");
+
         if (capability1.isPresent())
         {
             IDeathFear cap = capability1.orElseThrow(IllegalArgumentException::new);
+
+            CTweaks.logger.info(cap.getFear());
 
             if (cap.getMaxFearCounter() != 0)
             {
@@ -72,10 +82,10 @@ public class ClientEventHandler {
         }
 
         renderer.begin(7, DefaultVertexFormats.POSITION_COLOR_TEX);
-        renderer.vertex(0.0D, height, -1).color(1,1,1, alpha).uv(0.0F, 1.0F).endVertex();
-        renderer.vertex(width, height, -1).color(1,1,1, alpha).uv(1.0F, 1.0F).endVertex();
-        renderer.vertex(width, 0.0D, -1).color(1,1,1, alpha).uv(1.0F, 0.0F).endVertex();
-        renderer.vertex(0.0D, 0.0D, -1).color(1,1,1, alpha).uv(0.0F, 0.0F).endVertex();
+        renderer.vertex(0.0D, height, -90).color(1,1,1, alpha).uv(0.0F, 1.0F).endVertex();
+        renderer.vertex(width, height, -90).color(1,1,1, alpha).uv(1.0F, 1.0F).endVertex();
+        renderer.vertex(width, 0.0D, -90).color(1,1,1, alpha).uv(1.0F, 0.0F).endVertex();
+        renderer.vertex(0.0D, 0.0D, -90).color(1,1,1, alpha).uv(0.0F, 0.0F).endVertex();
         tessellator.end();
 
         RenderSystem.disableAlphaTest();

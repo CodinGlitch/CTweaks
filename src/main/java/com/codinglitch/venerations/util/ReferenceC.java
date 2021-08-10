@@ -1,5 +1,5 @@
 
-package com.codinglitch.ctweaks.util;
+package com.codinglitch.venerations.util;
 
 import java.util.UUID;
 
